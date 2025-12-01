@@ -47,14 +47,68 @@ Section3-1-Agents = Agents
 Section3-1-Data : (Γ : Ctxt) → Set
 Section3-1-Data = Data
 
+Section3-1-Time : (Γ : Ctxt) → Set
+Section3-1-Time = Res
+
+Section3-1-Comparison : Set
+Section3-1-Comparison = Comparison
+
+Section3-1-DistAtom : (Γ : Ctxt) → Set₁
+Section3-1-DistAtom = Atom
+
+Section3-1-SetAtom : (Γ : Ctxt) → Set₁
+Section3-1-SetAtom = Form
+
+Section3-1-Formula : (Γ : Ctxt) → Set₁
+Section3-1-Formula = Form
+
 \end{code}
 
+The forwarding example is defined here:
+
+\begin{code}
+
+open import Rules(𝔻)(W)
+
+Section3-2-Synchrony : {Γ : Ctxt} (Δ : Res Γ) → Form Γ
+Section3-2-Synchrony = synchrony-assumption
+
+Section3-2-Forward : {Γ : Ctxt} → Agent Γ → Agent Γ → Agent Γ → Form Γ
+Section3-2-Forward = relay
+
+Section-3-2-Conlcusion : (Γ : ℂ₀) (a b c : ℂAgent Γ) (Δ r : ℂRes Γ) (p : ℂData Γ) → Rule
+Section-3-2-Conlcusion = example1
+
+\end{code}
 The semantics of TPTL-dist is defined here:
 
 \begin{code}
 
 open import Semantics(𝔻)(W)
 
+Section3-3-Figure2 : Set₁
+Section3-3-Figure2 = World
+
+Section3-3-Figure3-Agent : {Γ : Ctxt} → Agent Γ → Sub Γ → agent
+Section3-3-Figure3-Agent = ⟦_⟧ᵢ_
+
+Section3-3-Figure3-Agents : {Γ : Ctxt} → Agents Γ → Sub Γ → agents
+Section3-3-Figure3-Agents = ⟦_⟧ₛ_
+
+Section3-3-Figure3-Atom : {Γ : Ctxt} → Atom Γ → Sub Γ → atom
+Section3-3-Figure3-Atom = ⟦_⟧ₐ_
+
+Section3-3-Figure3-Data : {Γ : Ctxt} → Data Γ → Sub Γ → 𝔻
+Section3-3-Figure3-Data = ⟦_⟧d_
+
+Section3-3-Figure3-Time : {Γ : Ctxt} → Res Γ → Sub Γ → 𝕎
+Section3-3-Figure3-Time = ⟦_⟧ᵣ_
+
+Section3-3-Figure3-Comparison : Comparison → 𝕎 → 𝕎 → Set 
+Section3-3-Figure3-Comparison = ⟦_⟧ᶜ
+
+Section3-3-Figure3 : {Γ : Ctxt} → Model Γ → Form Γ → Set₁
+Section3-3-Figure3 = _⊨_
 \end{code}
 
 TPTL-dist's rules are defined here. These files include both primitive and derived rules.
