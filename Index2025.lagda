@@ -3,6 +3,7 @@
 
 open import Level using (Level ; 0ℓ ; Lift ; lift ; lower) renaming (suc to lsuc)
 open import Axiom.ExcludedMiddle -- used to prove rule-classical-sat
+open import Data.Product
 
 \end{code}
 
@@ -76,26 +77,41 @@ open World.World W
 Section3-3-Figure2 : Set₁
 Section3-3-Figure2 = World
 
-Section3-3-Figure3-Agent : {Γ : Ctxt} → Agent Γ → Sub Γ → agent
-Section3-3-Figure3-Agent = ⟦_⟧ᵢ_
+Section3-3-Figure3 :
+    ({Γ : Ctxt} → Agent Γ → Sub Γ → agent)
+  × ({Γ : Ctxt} → Agents Γ → Sub Γ → agents)
+  × ({Γ : Ctxt} → Atom Γ → Sub Γ → atom)
+  × ({Γ : Ctxt} → Data Γ → Sub Γ → 𝔻)
+  × ({Γ : Ctxt} → Res Γ → Sub Γ → 𝕎)
+  × (Comparison → 𝕎 → 𝕎 → Set)
+Section3-3-Figure3 =
+  Section3-3-Figure3-Agent ,
+  Section3-3-Figure3-Agents ,
+  Section3-3-Figure3-Atom ,
+  Section3-3-Figure3-Data ,
+  Section3-3-Figure3-Time ,
+  Section3-3-Figure3-Comparison
+  where
+    Section3-3-Figure3-Agent : {Γ : Ctxt} → Agent Γ → Sub Γ → agent
+    Section3-3-Figure3-Agent = ⟦_⟧ᵢ_
 
-Section3-3-Figure3-Agents : {Γ : Ctxt} → Agents Γ → Sub Γ → agents
-Section3-3-Figure3-Agents = ⟦_⟧ₛ_
+    Section3-3-Figure3-Agents : {Γ : Ctxt} → Agents Γ → Sub Γ → agents
+    Section3-3-Figure3-Agents = ⟦_⟧ₛ_
 
-Section3-3-Figure3-Atom : {Γ : Ctxt} → Atom Γ → Sub Γ → atom
-Section3-3-Figure3-Atom = ⟦_⟧ₐ_
+    Section3-3-Figure3-Atom : {Γ : Ctxt} → Atom Γ → Sub Γ → atom
+    Section3-3-Figure3-Atom = ⟦_⟧ₐ_
 
-Section3-3-Figure3-Data : {Γ : Ctxt} → Data Γ → Sub Γ → 𝔻
-Section3-3-Figure3-Data = ⟦_⟧d_
+    Section3-3-Figure3-Data : {Γ : Ctxt} → Data Γ → Sub Γ → 𝔻
+    Section3-3-Figure3-Data = ⟦_⟧d_
 
-Section3-3-Figure3-Time : {Γ : Ctxt} → Res Γ → Sub Γ → 𝕎
-Section3-3-Figure3-Time = ⟦_⟧ᵣ_
+    Section3-3-Figure3-Time : {Γ : Ctxt} → Res Γ → Sub Γ → 𝕎
+    Section3-3-Figure3-Time = ⟦_⟧ᵣ_
 
-Section3-3-Figure3-Comparison : Comparison → 𝕎 → 𝕎 → Set
-Section3-3-Figure3-Comparison = ⟦_⟧ᶜ
+    Section3-3-Figure3-Comparison : Comparison → 𝕎 → 𝕎 → Set
+    Section3-3-Figure3-Comparison = ⟦_⟧ᶜ
 
-Section3-3-Figure3 : {Γ : Ctxt} → Model Γ → Form Γ → Set₁
-Section3-3-Figure3 = _⊨_
+Section3-3-Figure4 : {Γ : Ctxt} → Model Γ → Form Γ → Set₁
+Section3-3-Figure4 = _⊨_
 
 \end{code}
 
@@ -139,7 +155,8 @@ The following file includes simple examples of formulas that can be derived usin
 
 \begin{code}
 
-open import Rules(𝔻)(W)(EM)
+--open import Rules(𝔻)(W)(EM)
+open import RulesProp(𝔻)(W)
 
 \end{code}
 

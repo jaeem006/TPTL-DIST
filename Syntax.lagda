@@ -147,6 +147,12 @@ data Comparison : Set where
   EQ : Comparison
   PR : Comparison
 
+{--
+data SetAtom : (Γ : Ctxt) → Set where
+  _∈ₐ_    : {Γ : Ctxt} → Agent Γ → Agents Γ → SetAtom Γ
+  ∣_∣ₛ＝_ : {Γ : Ctxt} → Agents Γ → ℕ → SetAtom Γ
+--}
+
 data Form : (Γ : Ctxt) → Set₁ where
   𝕒     : {Γ : Ctxt} → Atom Γ → Form Γ
   -- Propositional logic
@@ -159,8 +165,11 @@ data Form : (Γ : Ctxt) → Set₁ where
   -- Predicate logic
   ∀·    : {Γ : Ctxt} → (u : 𝕌) → Form (Γ ، 𝕍𝕌 u) → Form Γ
   ∃·    : {Γ : Ctxt} → (u : 𝕌) → Form (Γ ، 𝕍𝕌 u) → Form Γ
-  _∈ₐ_  : {Γ : Ctxt} → Agent Γ → Agents Γ → Form Γ
-  ∣_∣ₛ＝_     : {Γ : Ctxt} → Agents Γ → ℕ → Form Γ
+--  𝔸     : {Γ : Ctxt} → SetAtom Γ → Form Γ
+--
+  _∈ₐ_    : {Γ : Ctxt} → Agent Γ → Agents Γ → Form Γ
+  ∣_∣ₛ＝_ : {Γ : Ctxt} → Agents Γ → ℕ → Form Γ
+--
 --  _∈ᵢ_  : {Γ : Ctxt} → Data Γ → DataProp → Form Γ
 --  ⟨_،_⟩∈ᵣ_  : {Γ : Ctxt} → Data Γ → Data Γ → DataRel → Form Γ
   -- Temporal logic
