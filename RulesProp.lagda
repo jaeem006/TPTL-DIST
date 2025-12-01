@@ -203,7 +203,7 @@ rule¬I Γ r A =
 abstract
   rule¬I-sat : (M : Model₀) (Γ : ℂ₀) (r : ℂRes Γ) (A : ℂForm Γ)
              → sat-rule M (rule¬I Γ r A)
-  rule¬I-sat M Γ r A (sat⊥ , _) s satΓ a = lower (sat⊥ s (satΓ , a))
+  rule¬I-sat M Γ r A (sat⊥ , _) s satΓ a = sat⊥ s (satΓ , a)
 
 --       Γ, Δ ⊢ᵣ A
 -- --------------------
@@ -225,7 +225,7 @@ rule¬E-sat-ctxt₁ : (c : ℂ₀) (d : ℂℂ c)
                  → sat-ctxt (ℂe c (¬· A) r ⨾ d) (M ≔ₛ s)
                  → ¬ ((M ≔ₛ ⋆Sub e s) ≔ₜ (⟦ ↑ᵣ (⊆⨾ c d) r ⟧ᵣ ⋆Sub e s)) ⊨ ↑ (⊆⨾ c d) A
 rule¬E-sat-ctxt₁ c ℂ⟨⟩ r A refl M s (h , q) z =
-  q (subst₂ (λ x y → ((M ≔ₛ s) ≔ₜ (⟦ x ⟧ᵣ s)) ⊨ y) (↑ᵣ⊆-refl r) (↑⊆-refl A) z)
+  lower (q (subst₂ (λ x y → ((M ≔ₛ s) ≔ₜ (⟦ x ⟧ᵣ s)) ⊨ y) (↑ᵣ⊆-refl r) (↑⊆-refl A) z))
 rule¬E-sat-ctxt₁ c (ℂx d f a) r A e M s (h , q) z =
   rule¬E-sat-ctxt₁ c d r A e M s h z
 rule¬E-sat-ctxt₁ c (ℂv d v) r A e M (s ⹁ .v ∶ u) h z =

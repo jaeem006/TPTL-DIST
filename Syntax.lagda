@@ -159,7 +159,6 @@ data Form : (Γ : Ctxt) → Set₁ where
   _∧·_  : {Γ : Ctxt} → Form Γ → Form Γ → Form Γ
   _∨·_  : {Γ : Ctxt} → Form Γ → Form Γ → Form Γ
   _→·_  : {Γ : Ctxt} → Form Γ → Form Γ → Form Γ
-  ¬·_   : {Γ : Ctxt} → Form Γ → Form Γ
   -- Predicate logic
   ∀·    : {Γ : Ctxt} → (u : 𝕌) → Form (Γ ، 𝕍𝕌 u) → Form Γ
   ∃·    : {Γ : Ctxt} → (u : 𝕌) → Form (Γ ، 𝕍𝕌 u) → Form Γ
@@ -187,6 +186,8 @@ data Form : (Γ : Ctxt) → Set₁ where
   --}
   _⟨_⟩_   : {Γ : Ctxt} → (t₁ : Res Γ) → Comparison → (t₂ : Res Γ) → Form Γ
 
+¬·_ : {Γ : Ctxt} → Form Γ → Form Γ
+¬· f = f →· ⊥·
 
 _⊑_ : {Γ : Ctxt} → (t₁ : Res Γ) → (t₂ : Res Γ) → Form Γ
 _⊑_ = _⟨ LE ⟩_

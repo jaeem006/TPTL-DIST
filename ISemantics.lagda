@@ -469,7 +469,7 @@ rule¬E-sat-ictxt₁ : {Γ Δ Φ Ψ : Ctxt} (c : 𝕀ℂ ⟨⟩ Γ) (d : 𝕀ℂ
                     (j : Ψ ⊆ Γ)
                   → sat-ictxt (𝕀ℂe c (¬· A) r i j ⨟ d) (M ≔ₛ s)
                   → ¬ ((M ≔ₛ s) ≔ₜ (⟦ ↑ᵣ (⊆-trans j (𝕀ℂ⊆ d)) r ⟧ᵣ s)) ⊨ ↑ (⊆-trans i (𝕀ℂ⊆ d)) A
-rule¬E-sat-ictxt₁ {Γ} {Δ} {Φ} {Ψ} c 𝕀ℂ⟨⟩ r A M s i j (h , q) = q
+rule¬E-sat-ictxt₁ {Γ} {Δ} {Φ} {Ψ} c 𝕀ℂ⟨⟩ r A M s i j (h , q) = λ k → lower (q k)
 rule¬E-sat-ictxt₁ {Γ} {Δ} {Φ} {Ψ} c (𝕀ℂx d f a i₁ j₁) r A M s i j (h , q) z =
   rule¬E-sat-ictxt₁ c d r A M s i j h z
 rule¬E-sat-ictxt₁ {Γ} {Δ} {Φ} {Ψ} c (𝕀ℂv d v) r A M (s ⹁ .v ∶ v₁) i j h z =
@@ -716,7 +716,7 @@ abstract
                 (j : Φ ⊆ c)
               → sat-irule M (irule¬I Γ Φ Ψ r A i j)
   irule¬I-sat M Γ Φ Ψ r A i j (sat⊥ , _) s satΓ a =
-    lower (sat⊥ s (satΓ , a))
+    sat⊥ s (satΓ , a)
 
 --         Γ ⊢ᵣ A
 -- ----------------------
@@ -840,8 +840,8 @@ split {Γ} {Δ} (𝕀ℂv c v) n with split c n
 
 data Command : Set₁ where
   Com→I   : Command
-  Com¬E   : ℕ → Command
-  Com¬I   : Command
+--  Com¬E   : ℕ → Command
+--  Com¬I   : Command
   Com⊥E   : ℕ → Command
   Com∨Iₗ  : Command
   Com∨Iᵣ  : Command
@@ -906,6 +906,7 @@ execute M Com→I (iseq {Γ} Δ {Φ} {Ψ} (CEr T) (A →· B) I J) =
   λ _ → irule→I-sat M Δ Φ Ψ T A B I J
 execute M Com→I s@(iseq {Γ} Δ {Φ} {Ψ} T C I J) =
   [ s ] , [] , (λ _ (z , _) → z) -- do nothing
+{--
 -- ¬E
 execute M (Com¬E n) s@(iseq {Γ} Δ {Φ} {Ψ} (CEr T) C I J)
   with split Δ n
@@ -925,6 +926,7 @@ execute M Com¬I s@(iseq {Γ} Δ {Φ} {Ψ} (CEr T) (¬· C) I J) =
   λ _ → irule¬I-sat M Δ Ψ Φ T C I J
 execute M Com¬I s@(iseq {Γ} Δ {Φ} {Ψ} T C I J) =
   [ s ] , [] , (λ _ (z , _) → z) -- do nothing
+--}
 -- ⊥E
 execute M (Com⊥E n) s@(iseq {Γ} Δ {Φ} {Ψ} (CEr T) C I J)
   with split Δ n
@@ -1020,6 +1022,7 @@ execute′ M Com→I (iseq {Γ} Δ {Φ} {Ψ} (CEr T) (A →· B) I J) =
   [] , λ _ → [ iseq (𝕀ℂe Δ A T J I) (CEr T) B I J ] , irule→I-sat M Δ Φ Ψ T A B I J
 execute′ M Com→I s@(iseq {Γ} Δ {Φ} {Ψ} T C I J) =
   [] , λ _ → [ s ] , (λ (z , _) → z) -- do nothing
+{--
 -- ¬E
 execute′ M (Com¬E n) s@(iseq {Γ} Δ {Φ} {Ψ} (CEr T) C I J)
   with split Δ n
@@ -1038,6 +1041,7 @@ execute′ M Com¬I s@(iseq {Γ} Δ {Φ} {Ψ} (CEr T) (¬· C) I J) =
   [] , λ _ → [ iseq (𝕀ℂe Δ C T J I) (CEr T) ⊥· I ⟨⟩⊆ ] , irule¬I-sat M Δ Ψ Φ T C I J
 execute′ M Com¬I s@(iseq {Γ} Δ {Φ} {Ψ} T C I J) =
   [] , λ _ → [ s ] , (λ (z , _) → z) -- do nothing
+--}
 -- ⊥E
 execute′ M (Com⊥E n) s@(iseq {Γ} Δ {Φ} {Ψ} (CEr T) C I J)
   with split Δ n
@@ -1242,6 +1246,10 @@ example2 M {c} Γ A =
   in p₁ (cs₁ c A 𝟎)
 
 
+\end{code}
+
+-- TO FIX
+
 -- To prove this derived rule, we use a mixture of execute′ which we only use for ComCut
 -- and execute, which we use for the other rules
 
@@ -1259,7 +1267,7 @@ irule¬∨L-sat : (M : Model₀) {c : Ctxt} (Γ : 𝕀ℂ ⟨⟩ c) (T R : Res c
 irule¬∨L-sat M {c} Γ T R A B C (satB , _) =
   let c₁ , p₁ = execute′ M (ComCut R (¬· A)) (iseq (𝕀ℂe Γ (¬· (A ∨· B)) R ⊆r ⊆r) (CEr T) C ⊆r ⊆r) in
   let s₂ , p₂ = p₁ (lift ⊆r , lift ⊆r , lift tt) in
-  p₂ ((let l₃ , c₃ , p₃ = executeScript M (Node Com¬I [ Node (Com¬E 1) [ Node Com∨Iₗ [ Node ComId [] ] ] ]) (iseq (𝕀ℂe Γ (¬· (A ∨· B)) R ⊆r ⊆r) (CEr R) (¬· A) ⊆r ⊆r)
+  p₂ ((let l₃ , c₃ , p₃ = executeScript M (Node Com→I [ Node (Com→E 1) [ Node Com∨Iₗ [ Node ComId [] ] ] ]) (iseq (𝕀ℂe Γ (¬· (A ∨· B)) R ⊆r ⊆r) (CEr R) (¬· A) ⊆r ⊆r)
        in p₃ (cs₁ c A R) (lift tt)) ,
       (let c₃ , p₃ = execute′ M (ComCut R (¬· B)) (iseq (𝕀ℂe (𝕀ℂe Γ (¬· (A ∨· B)) R ⊆r ⊆r) (¬· A) R ⊆r ⊆r) (CEr T) C ⊆r ⊆r)
        in let s₄ , p₄ = p₃ (lift ⊆r , lift ⊆r , lift tt)

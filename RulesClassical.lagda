@@ -59,7 +59,7 @@ abstract
                      → sat-rule M (rule-classical Γ R A)
   rule-classical-sat M Γ R A _ s satΓ with EM {((M ≔ₛ s) ≔ₜ (⟦ R ⟧ᵣ s)) ⊨ A}
   ... | yes p = inj₁ p
-  ... | no p = inj₂ p
+  ... | no p = inj₂ λ k → lift (p k)
 
 --    Γ, □ A @ r, A @ r₁ ⊢[T] C    Γ ⊢[T] r ⊑ r₁
 -- ------------------------------------------------
