@@ -460,7 +460,7 @@ rule-◇↓-dense-sat M Γ R r₁ r₂ A (sat1 , _) =
 
 -- if 'a' is sent by 'i' to 'A' now then by 'Δ' it will be receiced by all the agents in 'A'
 synchrony-assumption-body : {Γ : Ctxt} (Δ : Res Γ) → Form (Γ ، 𝕍Agent ، 𝕍Agents ، 𝕍Data ، 𝕍Agent)
-synchrony-assumption-body Δ = (𝕒0 ∈ₐ 𝔸2) →· □ (send[ 𝕒3 ⇒ 𝕕1 ⇒ 𝔸2 ] →· ◇↓ (↑ᵣ₃ Δ) recv[ 𝕒0 ⇐ 𝕕1 ⇐ 𝕒3 ])
+synchrony-assumption-body Δ = (𝔸 (𝕒0 ∈ₐ 𝔸2)) →· □ (send[ 𝕒3 ⇒ 𝕕1 ⇒ 𝔸2 ] →· ◇↓ (↑ᵣ₃ Δ) recv[ 𝕒0 ⇐ 𝕕1 ⇐ 𝕒3 ])
 
 synchrony-assumption : {Γ : Ctxt} (Δ : Res Γ) → Form Γ
 synchrony-assumption Δ =
@@ -468,7 +468,7 @@ synchrony-assumption Δ =
 -- 𝕒3  𝔸2  𝕕1  a0
 
 synchrony-assumption-body₁ : {Γ : Ctxt} (Δ : Res Γ) (a : Agent Γ) → Form (Γ ، 𝕍Agents ، 𝕍Data ، 𝕍Agent)
-synchrony-assumption-body₁ Δ a = (𝕒0 ∈ₐ 𝔸2) →· □ (send[ ↑ᵢ₂ a ⇒ 𝕕1 ⇒ 𝔸2 ] →· ◇↓ (↑ᵣ₂ Δ) recv[ 𝕒0 ⇐ 𝕕1 ⇐ ↑ᵢ₂ a ])
+synchrony-assumption-body₁ Δ a = (𝔸 (𝕒0 ∈ₐ 𝔸2)) →· □ (send[ ↑ᵢ₂ a ⇒ 𝕕1 ⇒ 𝔸2 ] →· ◇↓ (↑ᵣ₂ Δ) recv[ 𝕒0 ⇐ 𝕕1 ⇐ ↑ᵢ₂ a ])
 
 synchrony-assumption₁ : {Γ : Ctxt} (Δ : Res Γ) (a : Agent Γ) → Form Γ
 synchrony-assumption₁ Δ a =
@@ -479,7 +479,7 @@ synchrony-assumption-sub : {Γ : Ctxt} (Δ : Res Γ) (a : Agent Γ)
                          → sub (∀ₛ (∀ᵢ (∀ₐ (synchrony-assumption-body Δ)))) (CSub،ₗ a)
                          ≡ synchrony-assumption₁ Δ a
 synchrony-assumption-sub {Γ} Δ a =
-  cong₂ (λ x y → ∀ₛ (∀ᵢ (∀ₐ ((𝕒0 ∈ₐ 𝔸2) →· □ (send[ x ⇒ 𝕕1 ⇒ 𝔸2 ] →· y)))))
+  cong₂ (λ x y → ∀ₛ (∀ᵢ (∀ₐ ((𝔸 (𝕒0 ∈ₐ 𝔸2)) →· □ (send[ x ⇒ 𝕕1 ⇒ 𝔸2 ] →· y)))))
         (sym (↑ᵢ₂≡↑ᵢ₀↑ᵢ₀↑ᵢ₀ a))
         (cong₂ (λ x y → Ｆ ◇ (Ｆ (𝕣₀ ⊑ 𝕣₁ ⋆ x ∧· y)))
                (trans (trans (cong (λ x → sub-Res x (CSub، 𝕍ℝ (CSub، 𝕍ℝ (CSub، 𝕍Agent (CSub، 𝕍Data (CSub، 𝕍Agents (CSub،ₗ a)))))))
@@ -489,7 +489,7 @@ synchrony-assumption-sub {Γ} Δ a =
                (cong₃ (recv[_⇐_⇐_]) refl refl (trans (sym (↑ᵢ₁≡↑ᵢ₀↑ᵢ₀ _)) (cong ↑ᵢ₁ (sym (↑ᵢ₂≡↑ᵢ₀↑ᵢ₀↑ᵢ₀ _))))))
 
 synchrony-assumption-body₂ : {Γ : Ctxt} (Δ : Res Γ) (a : Agent Γ) (A : Agents Γ) → Form (Γ ، 𝕍Data ، 𝕍Agent)
-synchrony-assumption-body₂ Δ a A = (𝕒0 ∈ₐ ↑ₛ₁ A) →· □ (send[ ↑ᵢ₁ a ⇒ 𝕕1 ⇒ ↑ₛ₁ A ] →· ◇↓ (↑ᵣ₁ Δ) recv[ 𝕒0 ⇐ 𝕕1 ⇐ ↑ᵢ₁ a ])
+synchrony-assumption-body₂ Δ a A = (𝔸 (𝕒0 ∈ₐ ↑ₛ₁ A)) →· □ (send[ ↑ᵢ₁ a ⇒ 𝕕1 ⇒ ↑ₛ₁ A ] →· ◇↓ (↑ᵣ₁ Δ) recv[ 𝕒0 ⇐ 𝕕1 ⇐ ↑ᵢ₁ a ])
 
 synchrony-assumption₂ : {Γ : Ctxt} (Δ : Res Γ) (a : Agent Γ) (A : Agents Γ) → Form Γ
 synchrony-assumption₂ Δ a A =
@@ -500,7 +500,7 @@ synchrony-assumption₁-sub : {Γ : Ctxt} (Δ : Res Γ) (a : Agent Γ) (A : Agen
                           → sub (∀ᵢ (∀ₐ (synchrony-assumption-body₁ Δ a))) (CSub،ₗ A)
                           ≡ synchrony-assumption₂ Δ a A
 synchrony-assumption₁-sub {Γ} Δ a A =
-  cong₃ (λ x y z → ∀ᵢ (∀ₐ ((𝕒0 ∈ₐ z) →· □ (send[ x ⇒ 𝕕1 ⇒ z ] →· y))))
+  cong₃ (λ x y z → ∀ᵢ (∀ₐ ((𝔸 (𝕒0 ∈ₐ z)) →· □ (send[ x ⇒ 𝕕1 ⇒ z ] →· y))))
         (subst (λ x → sub-Agent x (CSub، 𝕍Agent (CSub، 𝕍Data (CSub،ₗ A))) ≡ ↑ᵢ₁ a)
                (sym (↑ᵢ₂≡↑⊆،＋ Γ 𝕍Agents 𝕍Data 𝕍Agent a))
                (sub-Agent-↑ᵢ،＋ Γ (⟨⟩ ، 𝕍Data ، 𝕍Agent) 𝕍Agents A (↑ᵢ₁ a)))
@@ -517,7 +517,7 @@ synchrony-assumption₁-sub {Γ} Δ a A =
         (sym (↑ₛ₁≡↑ₛ₀↑ₛ₀ A))
 
 synchrony-assumption-body₃ : {Γ : Ctxt} (Δ : Res Γ) (a : Agent Γ) (A : Agents Γ) (p : Data Γ) → Form (Γ ، 𝕍Agent)
-synchrony-assumption-body₃ Δ a A p = (𝕒0 ∈ₐ ↑ₛ₀ A) →· □ (send[ ↑ᵢ₀ a ⇒ ↑d₀ p ⇒ ↑ₛ₀ A ] →· ◇↓ (↑ᵣ₀ Δ) recv[ 𝕒0 ⇐ ↑d₀ p ⇐ ↑ᵢ₀ a ])
+synchrony-assumption-body₃ Δ a A p = (𝔸 (𝕒0 ∈ₐ ↑ₛ₀ A)) →· □ (send[ ↑ᵢ₀ a ⇒ ↑d₀ p ⇒ ↑ₛ₀ A ] →· ◇↓ (↑ᵣ₀ Δ) recv[ 𝕒0 ⇐ ↑d₀ p ⇐ ↑ᵢ₀ a ])
 
 synchrony-assumption₃ : {Γ : Ctxt} (Δ : Res Γ) (a : Agent Γ) (A : Agents Γ) (p : Data Γ) → Form Γ
 synchrony-assumption₃ Δ a A p =
@@ -528,7 +528,7 @@ synchrony-assumption₂-sub : {Γ : Ctxt} (Δ : Res Γ) (a : Agent Γ) (A : Agen
                           → sub (∀ₐ (synchrony-assumption-body₂ Δ a A)) (CSub،ₗ p)
                           ≡ synchrony-assumption₃ Δ a A p
 synchrony-assumption₂-sub {Γ} Δ a A p =
-  cong₃ (λ x y z → ∀ₐ ((𝕒0 ∈ₐ z) →· □ (send[ x ⇒ ↑d₀ p ⇒ z ] →· y)))
+  cong₃ (λ x y z → ∀ₐ ((𝔸 (𝕒0 ∈ₐ z)) →· □ (send[ x ⇒ ↑d₀ p ⇒ z ] →· y)))
         (subst (λ x → sub-Agent x (CSub، 𝕍Agent (CSub،ₗ p)) ≡ ↑ᵢ₀ a)
                (sym (↑ᵢ₁≡↑⊆،＋ _ _ _ a))
                (sub-Agent-↑ᵢ،＋ Γ (⟨⟩ ، 𝕍Agent) 𝕍Data p (↑ᵢ₀ a)))
@@ -548,13 +548,13 @@ synchrony-assumption₂-sub {Γ} Δ a A p =
                (sub-Agents-↑ₛ،＋ Γ (⟨⟩ ، 𝕍Agent) 𝕍Data p (↑ₛ₀ A)))
 
 synchrony-assumption₄ : {Γ : Ctxt} (Δ : Res Γ) (a : Agent Γ) (A : Agents Γ) (p : Data Γ) (b : Agent Γ) → Form Γ
-synchrony-assumption₄ Δ a A p b = (b ∈ₐ A) →· □ (send[ a ⇒ p ⇒ A ] →· ◇↓ Δ recv[ b ⇐ p ⇐ a ])
+synchrony-assumption₄ Δ a A p b = (𝔸 (b ∈ₐ A)) →· □ (send[ a ⇒ p ⇒ A ] →· ◇↓ Δ recv[ b ⇐ p ⇐ a ])
 
 synchrony-assumption₃-sub : {Γ : Ctxt} (Δ : Res Γ) (a : Agent Γ) (A : Agents Γ) (p : Data Γ) (b : Agent Γ)
                           → sub (synchrony-assumption-body₃ Δ a A p) (CSub،ₗ b)
                           ≡ synchrony-assumption₄ Δ a A p b
 synchrony-assumption₃-sub {Γ} Δ a A p b =
-  cong₄ (λ x y z w → (b ∈ₐ x) →· □ (send[ y ⇒ z ⇒ x ] →· w))
+  cong₄ (λ x y z w → (𝔸 (b ∈ₐ x)) →· □ (send[ y ⇒ z ⇒ x ] →· w))
         (sub-Agents-↑ₛ،＋ Γ ⟨⟩ 𝕍Agent b A)
         (sub-Agent-↑ᵢ،＋ Γ ⟨⟩ 𝕍Agent b a)
         (sub-Data-↑d،＋ Γ ⟨⟩ 𝕍Agent b p)
@@ -610,11 +610,11 @@ example1-true M {Γ} a b c Δ r p (hyp1 , hyp2 , hyp3 , _) = concl
           (rule→L-sat M Γ (CEr r) r send[ a ⇒ p ⇒ [ b ]ₐ ] (◇↓ Δ recv[ b ⇐ p ⇐ a ]) (◇↓ Δ recv[ b ⇐ p ⇐ a ])
              (hyp3  , ruleLbl-sat M Γ (CEr r) (◇↓ Δ recv[ b ⇐ p ⇐ a ]) (lift tt) , lift tt) , lift tt)
 
-  a𝟙𝟘 : sat-sequent M (rseq Γ r (b ∈ₐ [ b ]ₐ))
+  a𝟙𝟘 : sat-sequent M (rseq Γ r (𝔸 (b ∈ₐ [ b ]ₐ)))
   a𝟙𝟘 = λ s satΓ → lift (here refl) -- introduce a rule
 
   a𝟡 : sat-sequent M (rseq (ℂe Γ (synchrony-assumption₄ Δ a [ b ]ₐ p b) r) r (◇↓ Δ recv[ b ⇐ p ⇐ a ]))
-  a𝟡 = rule→L-sat M Γ (CEr r) r (b ∈ₐ [ b ]ₐ) (□ (send[ a ⇒ p ⇒ [ b ]ₐ ] →· ◇↓ Δ recv[ b ⇐ p ⇐ a ])) (◇↓ Δ recv[ b ⇐ p ⇐ a ])
+  a𝟡 = rule→L-sat M Γ (CEr r) r (𝔸 (b ∈ₐ [ b ]ₐ)) (□ (send[ a ⇒ p ⇒ [ b ]ₐ ] →· ◇↓ Δ recv[ b ⇐ p ⇐ a ])) (◇↓ Δ recv[ b ⇐ p ⇐ a ])
                  (a𝟙𝟘 , a𝟙𝟙 , lift tt)
 
   a𝟠 : sat-sequent M (rseq (ℂe Γ (sub (synchrony-assumption-body₃ Δ a [ b ]ₐ p) (CSub،ₗ b)) r)
@@ -685,11 +685,11 @@ example1-true M {Γ} a b c Δ r p (hyp1 , hyp2 , hyp3 , _) = concl
             (b𝟙 , lift tt) ,
           lift tt)
 
-  c𝟙𝟘 : sat-sequent M (rseq Γ r (c ∈ₐ [ c ]ₐ))
+  c𝟙𝟘 : sat-sequent M (rseq Γ r (𝔸 (c ∈ₐ [ c ]ₐ)))
   c𝟙𝟘 = λ s satΓ → lift (here refl) -- introduce a rule
 
   c𝟡 : sat-sequent M (rseq (ℂe Γ (synchrony-assumption₄ Δ b [ c ]ₐ p c) r) r (◇↓ Δ (◇↓ Δ recv[ c ⇐ p ⇐ b ])))
-  c𝟡 = rule→L-sat M Γ (CEr r) r (c ∈ₐ [ c ]ₐ) (□ (send[ b ⇒ p ⇒ [ c ]ₐ ] →· ◇↓ Δ recv[ c ⇐ p ⇐ b ])) (◇↓ Δ (◇↓ Δ recv[ c ⇐ p ⇐ b ]))
+  c𝟡 = rule→L-sat M Γ (CEr r) r (𝔸 (c ∈ₐ [ c ]ₐ)) (□ (send[ b ⇒ p ⇒ [ c ]ₐ ] →· ◇↓ Δ recv[ c ⇐ p ⇐ b ])) (◇↓ Δ (◇↓ Δ recv[ c ⇐ p ⇐ b ]))
                  (c𝟙𝟘 , c𝟙𝟙 , lift tt)
 
   c𝟠 : sat-sequent M (rseq (ℂe Γ (sub (synchrony-assumption-body₃ Δ b [ c ]ₐ p) (CSub،ₗ c)) r)

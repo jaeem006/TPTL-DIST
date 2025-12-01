@@ -263,6 +263,10 @@ _⊆_ : (Γ Δ : Ctxt) → Set
 --}
 --}
 
+↑A : {Γ Δ : Ctxt} (s : Γ ⊆ Δ) → SetAtom Γ → SetAtom Δ
+↑A {Γ} {Δ} s (a ∈ₐ A) = ↑ᵢ s a ∈ₐ ↑ₛ s A
+↑A {Γ} {Δ} s (∣ A ∣ₛ＝ n) = ∣ ↑ₛ s A ∣ₛ＝ n
+
 ↑ : {Γ Δ : Ctxt}
   → Γ ⊆ Δ
   → Form Γ
@@ -276,8 +280,7 @@ _⊆_ : (Γ Δ : Ctxt) → Set
 ↑ {Γ} {Δ} s (¬· f) = ¬· ↑ s f
 ↑ {Γ} {Δ} s (∀· u f) = ∀· u (↑ (⊆، (𝕍𝕌 u) s) f)
 ↑ {Γ} {Δ} s (∃· u f) = ∃· u (↑ (⊆، (𝕍𝕌 u) s) f)
-↑ {Γ} {Δ} s (a ∈ₐ A) = ↑ᵢ s a ∈ₐ ↑ₛ s A
-↑ {Γ} {Δ} s (∣ A ∣ₛ＝ n) = ∣ ↑ₛ s A ∣ₛ＝ n
+↑ {Γ} {Δ} s (𝔸 A) = 𝔸 (↑A s A)
 --↑ {Γ} {Δ} s (d ∈ᵢ D) = ↑d s d ∈ᵢ D
 --↑ {Γ} {Δ} s (⟨ d₁ ، d₂ ⟩∈ᵣ R) = ⟨ ↑d s d₁ ، ↑d s d₂ ⟩∈ᵣ R
 ↑ {Γ} {Δ} s (f Ｕ f₁) = ↑ s f Ｕ ↑ s f₁
@@ -411,12 +414,20 @@ _⊆_ : (Γ Δ : Ctxt) → Set
 --≡↑ᵣ {Γ} {Δ} (𝐬 r) s₁ s₂ ≡s = cong 𝐬 (≡↑ᵣ r s₁ s₂ ≡s)
 ≡↑ᵣ {Γ} {Δ} (r ⋆ r₁) s₁ s₂ ≡s = cong₂ _⋆_ (≡↑ᵣ r s₁ s₂ ≡s) (≡↑ᵣ r₁ s₁ s₂ ≡s)
 
+≡↑A : {Γ Δ : Ctxt}
+      (A : SetAtom Γ)
+      (s₁ s₂ : Γ ⊆ Δ)
+    → ≡⊆ s₁ s₂
+    → ↑A s₁ A ≡ ↑A s₂ A
+≡↑A {Γ} {Δ} (x ∈ₐ x₁) s₁ s₂ ≡s = cong₂ _∈ₐ_ (≡↑ᵢ x s₁ s₂ ≡s) (≡↑ₛ x₁ s₁ s₂ ≡s)
+≡↑A {Γ} {Δ} (∣ A ∣ₛ＝ n) s₁ s₂ ≡s = cong (∣_∣ₛ＝ n) (≡↑ₛ A s₁ s₂ ≡s)
+
 ≡↑ : {Γ Δ : Ctxt}
      (F : Form Γ)
      (s₁ s₂ : Γ ⊆ Δ)
    → ≡⊆ s₁ s₂
    → ↑ s₁ F ≡ ↑ s₂ F
-≡↑ {Γ} {Δ} (𝕒 x) s₁ s₂ ≡s = cong 𝕒 ((≡↑ₐ x s₁ s₂ ≡s))
+≡↑ {Γ} {Δ} (𝕒 x) s₁ s₂ ≡s = cong 𝕒 (≡↑ₐ x s₁ s₂ ≡s)
 ≡↑ {Γ} {Δ} ⊤· s₁ s₂ ≡s = refl
 ≡↑ {Γ} {Δ} ⊥· s₁ s₂ ≡s = refl
 ≡↑ {Γ} {Δ} (f ∧· f₁) s₁ s₂ ≡s = cong₂ _∧·_ (≡↑ f s₁ s₂ ≡s) (≡↑ f₁ s₁ s₂ ≡s)
@@ -425,8 +436,7 @@ _⊆_ : (Γ Δ : Ctxt) → Set
 ≡↑ {Γ} {Δ} (¬· f) s₁ s₂ ≡s = cong ¬·_ (≡↑ f s₁ s₂ ≡s)
 ≡↑ {Γ} {Δ} (∀· u f) s₁ s₂ ≡s =  cong (∀· u) (≡↑ f (⊆، (𝕍𝕌 u)  s₁) (⊆، (𝕍𝕌 u) s₂) (≡⊆-⊆، (𝕍𝕌 u) s₁ s₂  ≡s))
 ≡↑ {Γ} {Δ} (∃· u f) s₁ s₂ ≡s =  cong (∃· u) (≡↑ f (⊆، (𝕍𝕌 u)  s₁) (⊆، (𝕍𝕌 u) s₂) (≡⊆-⊆، (𝕍𝕌 u) s₁ s₂  ≡s))
-≡↑ {Γ} {Δ} (x ∈ₐ x₁) s₁ s₂ ≡s = cong₂ _∈ₐ_ (≡↑ᵢ x s₁ s₂ ≡s) (≡↑ₛ x₁ s₁ s₂ ≡s)
-≡↑ {Γ} {Δ} (∣ A ∣ₛ＝ n) s₁ s₂ ≡s = cong (∣_∣ₛ＝ n) (≡↑ₛ A s₁ s₂ ≡s)
+≡↑ {Γ} {Δ} (𝔸 A) s₁ s₂ ≡s = cong 𝔸 (≡↑A A s₁ s₂ ≡s)
 --≡↑ {Γ} {Δ} (x ∈ᵢ x₁) s₁ s₂ ≡s = cong (_∈ᵢ x₁) (≡↑d x s₁ s₂ ≡s)
 --≡↑ {Γ} {Δ} (⟨ x ، x₁ ⟩∈ᵣ x₂) s₁ s₂ ≡s = cong₂ (⟨_،_⟩∈ᵣ x₂) (≡↑d x s₁ s₂ ≡s) (≡↑d x₁ s₁ s₂ ≡s)
 ≡↑ {Γ} {Δ} (f Ｕ f₁) s₁ s₂ ≡s = cong₂ _Ｕ_ (≡↑ f s₁ s₂ ≡s) (≡↑ f₁ s₁ s₂ ≡s)
@@ -689,6 +699,10 @@ sub-Res {Γ} {Δ} (r₁ ⋆ r₂) s = sub-Res r₁ s ⋆ sub-Res r₂ s
 --𝕌sub-Res {Γ} {Δ} (𝐬 r) s = 𝐬 (𝕌sub-Res r s)
 𝕌sub-Res {Γ} {Δ} (r₁ ⋆ r₂) s = 𝕌sub-Res r₁ s ⋆ 𝕌sub-Res r₂ s
 
+𝕌sub-SetAtom : {Γ Δ : Ctxt} (A : SetAtom Γ) (s : 𝕌CSub Γ Δ) → SetAtom Δ
+𝕌sub-SetAtom {Γ} {Δ} (a ∈ₐ A) s = 𝕌sub-Agent a s ∈ₐ 𝕌sub-Agents A s
+𝕌sub-SetAtom {Γ} {Δ} (∣ A ∣ₛ＝ n) s = ∣ 𝕌sub-Agents A s ∣ₛ＝ n
+
 -- substitution on the quantifiable variables only - resources are left untouched
 substitute : {Γ Δ : Ctxt} (f : Form Γ) (s : 𝕌CSub Γ Δ) → Form Δ
 substitute {Γ} {Δ} (𝕒 p) s = 𝕒 (𝕌sub-Atom p s)
@@ -700,8 +714,7 @@ substitute {Γ} {Δ} (f →· f₁) s = substitute f s →· substitute f₁ s
 substitute {Γ} {Δ} (¬· f) s = ¬· (substitute f s)
 substitute {Γ} {Δ} (∀· u f) s = ∀· u (substitute f (𝕌CSub، (𝕍𝕌 u) s))
 substitute {Γ} {Δ} (∃· u f) s = ∃· u (substitute f (𝕌CSub، (𝕍𝕌 u) s))
-substitute {Γ} {Δ} (a ∈ₐ A) s = 𝕌sub-Agent a s ∈ₐ 𝕌sub-Agents A s
-substitute {Γ} {Δ} (∣ A ∣ₛ＝ n) s = ∣ 𝕌sub-Agents A s ∣ₛ＝ n
+substitute {Γ} {Δ} (𝔸 A) s = 𝔸 (𝕌sub-SetAtom A s)
 --substitute {Γ} {Δ} (d ∈ᵢ D) s = 𝕌sub-Data d s ∈ᵢ D
 --substitute {Γ} {Δ} (⟨ d₁ ، d₂ ⟩∈ᵣ R) s = ⟨ 𝕌sub-Data d₁ s ، 𝕌sub-Data d₂ s ⟩∈ᵣ R
 substitute {Γ} {Δ} (f Ｕ f₁) s = substitute f s Ｕ substitute f₁ s
@@ -711,6 +724,10 @@ substitute {Γ} {Δ} (Ｙ f) s = Ｙ (substitute f s)
 substitute {Γ} {Δ} (Ｂ f) s = Ｂ (substitute f s)
 substitute {Γ} {Δ} (Ｆ f) s = Ｆ substitute f (𝕌CSub، 𝕍ℝ s)
 substitute {Γ} {Δ} (t₁ ⟨ c ⟩ t₂) s = 𝕌sub-Res t₁ s ⟨ c ⟩ 𝕌sub-Res t₂ s
+
+sub-SetAtom : {Γ Δ : Ctxt} (A : SetAtom Γ) (s : CSub Γ Δ) → SetAtom Δ
+sub-SetAtom {Γ} {Δ} (a ∈ₐ A) s = sub-Agent a s ∈ₐ sub-Agents A s
+sub-SetAtom {Γ} {Δ} (∣ A ∣ₛ＝ n) s = ∣ sub-Agents A s ∣ₛ＝ n
 
 -- general substitution
 sub : {Γ Δ : Ctxt} (f : Form Γ) (s : CSub Γ Δ) → Form Δ
@@ -723,8 +740,7 @@ sub {Γ} {Δ} (f →· f₁) s = sub f s →· sub f₁ s
 sub {Γ} {Δ} (¬· f) s = ¬· (sub f s)
 sub {Γ} {Δ} (∀· u f) s = ∀· u (sub f (CSub، (𝕍𝕌 u) s))
 sub {Γ} {Δ} (∃· u f) s = ∃· u (sub f (CSub، (𝕍𝕌 u) s))
-sub {Γ} {Δ} (a ∈ₐ A) s = sub-Agent a s ∈ₐ sub-Agents A s
-sub {Γ} {Δ} (∣ A ∣ₛ＝ n) s = ∣ sub-Agents A s ∣ₛ＝ n
+sub {Γ} {Δ} (𝔸 A) s = 𝔸 (sub-SetAtom A s)
 --sub {Γ} {Δ} (d ∈ᵢ D) s = sub-Data d s ∈ᵢ D
 --sub {Γ} {Δ} (⟨ d₁ ، d₂ ⟩∈ᵣ R) s = ⟨ sub-Data d₁ s ، sub-Data d₂ s ⟩∈ᵣ R
 sub {Γ} {Δ} (f Ｕ f₁) s = sub f s Ｕ sub f₁ s
@@ -935,6 +951,11 @@ sub-Atom-↑ₐ،＋ Γ Δ u v (atAction x) = cong atAction (sub-Action-↑ₜ،
 sub-Atom-↑ₐ،＋ Γ Δ u v (atEvent x) = cong atEvent (sub-Event-↑ₑ،＋ Γ Δ u v x)
 sub-Atom-↑ₐ،＋ Γ Δ u v (atCorrect x) = cong atCorrect (sub-Fault-↑f،＋ Γ Δ u v x)
 
+sub-↑A،＋ : (Γ Δ : Ctxt) (u : 𝕍) (v : C⟦𝕍⟧ Γ u) (a : SetAtom (Γ ＋ Δ))
+          → sub-SetAtom (↑A ⊆،＋ a) (CSub،＋ {Γ} {Δ} {u} v) ≡ a
+sub-↑A،＋ Γ Δ u v (x ∈ₐ x₁) = cong₂ _∈ₐ_ (sub-Agent-↑ᵢ،＋ Γ Δ u v x) (sub-Agents-↑ₛ،＋ Γ Δ u v x₁)
+sub-↑A،＋ Γ Δ u v (∣ A ∣ₛ＝ n) = cong (∣_∣ₛ＝ n) (sub-Agents-↑ₛ،＋ Γ Δ u v A)
+
 sub-↑،＋ : (Γ Δ : Ctxt) (u : 𝕍) (v : C⟦𝕍⟧ Γ u) (f : Form (Γ ＋ Δ))
         → sub (↑ ⊆،＋ f) (CSub،＋ {Γ} {Δ} {u} v) ≡ f
 sub-↑،＋ Γ Δ u v (𝕒 x) = cong 𝕒 (sub-Atom-↑ₐ،＋ Γ Δ u v x)
@@ -946,8 +967,7 @@ sub-↑،＋ Γ Δ u v (f →· f₁) = cong₂ _→·_ (sub-↑،＋ Γ Δ u v 
 sub-↑،＋ Γ Δ u v (¬· f) = cong ¬·_ (sub-↑،＋ Γ Δ u v f)
 sub-↑،＋ Γ Δ u v (∀· u₁ f) = cong (∀· u₁) (sub-↑،＋ Γ (Δ ، 𝕍𝕌 u₁) u v f)
 sub-↑،＋ Γ Δ u v (∃· u₁ f) = cong (∃· u₁) (sub-↑،＋ Γ (Δ ، 𝕍𝕌 u₁) u v f)
-sub-↑،＋ Γ Δ u v (x ∈ₐ x₁) = cong₂ _∈ₐ_ (sub-Agent-↑ᵢ،＋ Γ Δ u v x) (sub-Agents-↑ₛ،＋ Γ Δ u v x₁)
-sub-↑،＋ Γ Δ u v (∣ A ∣ₛ＝ n) = cong (∣_∣ₛ＝ n) (sub-Agents-↑ₛ،＋ Γ Δ u v A)
+sub-↑،＋ Γ Δ u v (𝔸 A) = cong 𝔸 (sub-↑A،＋ Γ Δ u v A)
 --sub-↑،＋ Γ Δ u v (x ∈ᵢ x₁) = cong₂ _∈ᵢ_ (sub-Data-↑d،＋ Γ Δ u v x) refl
 --sub-↑،＋ Γ Δ u v (⟨ x ، x₁ ⟩∈ᵣ x₂) = cong₃ ⟨_،_⟩∈ᵣ_ (sub-Data-↑d،＋ Γ Δ u v x) (sub-Data-↑d،＋ Γ Δ u v x₁) refl
 sub-↑،＋ Γ Δ u v (f Ｕ f₁) = cong₂ _Ｕ_ (sub-↑،＋ Γ Δ u v f) (sub-↑،＋ Γ Δ u v f₁)
@@ -1086,6 +1106,16 @@ sub-Res-↑ᵣ₁₀ Γ u w v r =
 ↑ₐ-trans {Γ} {Ψ} {Δ} e e₁ e₂ (atEvent x) cond = cong atEvent (↑ₑ-trans e e₁ e₂ x cond)
 ↑ₐ-trans {Γ} {Ψ} {Δ} e e₁ e₂ (atCorrect x) cond = cong atCorrect (↑f-trans e e₁ e₂ x cond)
 
+↑A-trans : {Γ Ψ Δ : Ctxt}
+           (e  : Γ ⊆ Δ)
+           (e₁ : Γ ⊆ Ψ)
+           (e₂ : Ψ ⊆ Δ)
+           (a  : SetAtom Γ)
+         → ((v : 𝕍) (i : ∈Ctxt v Γ) → e i ≡ e₂ (e₁ i))
+         → ↑A e a ≡ ↑A e₂ (↑A e₁ a)
+↑A-trans {Γ} {Ψ} {Δ} e e₁ e₂ (x ∈ₐ x₁) cond = cong₂ _∈ₐ_ (↑ᵢ-trans e e₁ e₂ x cond) (↑ₛ-trans e e₁ e₂ x₁ cond)
+↑A-trans {Γ} {Ψ} {Δ} e e₁ e₂ (∣ A ∣ₛ＝ n) cond = cong (∣_∣ₛ＝ n) (↑ₛ-trans e e₁ e₂ A cond)
+
 ↑-trans : {Γ Ψ Δ : Ctxt}
           (e  : Γ ⊆ Δ)
           (e₁ : Γ ⊆ Ψ)
@@ -1110,8 +1140,7 @@ sub-Res-↑ᵣ₁₀ Γ u w v r =
   cond′ : (v : 𝕍) (i : ∈Ctxt v (Γ ، 𝕍𝕌 u)) → ⊆، (𝕍𝕌 u) e i ≡ ⊆، (𝕍𝕌 u) e₂ (⊆، (𝕍𝕌 u) e₁ i)
   cond′ .(𝕍𝕌 u) (∈Ctxt0 .Γ) = refl
   cond′ v (∈CtxtS .(𝕍𝕌 u) i) = cong (∈CtxtS (𝕍𝕌 u)) (cond v i)
-↑-trans {Γ} {Ψ} {Δ} e e₁ e₂ (x ∈ₐ x₁) cond = cong₂ _∈ₐ_ (↑ᵢ-trans e e₁ e₂ x cond) (↑ₛ-trans e e₁ e₂ x₁ cond)
-↑-trans {Γ} {Ψ} {Δ} e e₁ e₂ (∣ A ∣ₛ＝ n) cond = cong (∣_∣ₛ＝ n) (↑ₛ-trans e e₁ e₂ A cond)
+↑-trans {Γ} {Ψ} {Δ} e e₁ e₂ (𝔸 A) cond = cong 𝔸 (↑A-trans e e₁ e₂ A cond)
 --↑-trans {Γ} {Ψ} {Δ} e e₁ e₂ (x ∈ᵢ x₁) cond = cong₂ _∈ᵢ_ (↑d-trans e e₁ e₂ x cond) refl
 --↑-trans {Γ} {Ψ} {Δ} e e₁ e₂ (⟨ x ، x₁ ⟩∈ᵣ x₂) cond = cong₃ ⟨_،_⟩∈ᵣ_ (↑d-trans e e₁ e₂ x cond) (↑d-trans e e₁ e₂ x₁ cond) refl
 ↑-trans {Γ} {Ψ} {Δ} e e₁ e₂ (f Ｕ f₁) cond = cong₂ _Ｕ_ (↑-trans e e₁ e₂ f cond) (↑-trans e e₁ e₂ f₁ cond)
@@ -1450,6 +1479,14 @@ sub-Res-↑ᵣ₁ Γ u w v r =
 ↑ₐ-refl {Γ} e (atEvent x) cond = cong atEvent (↑ₑ-refl e x cond)
 ↑ₐ-refl {Γ} e (atCorrect x) cond = cong atCorrect (↑f-refl e x cond)
 
+↑A-refl : {Γ : Ctxt}
+          (e  : Γ ⊆ Γ)
+          (a  : SetAtom Γ)
+        → ((v : 𝕍) (i : ∈Ctxt v Γ) → e i ≡ i)
+        → ↑A e a ≡ a
+↑A-refl {Γ} e (x ∈ₐ x₁) cond = cong₂ _∈ₐ_ (↑ᵢ-refl e x cond) (↑ₛ-refl e x₁ cond)
+↑A-refl {Γ} e (∣ A ∣ₛ＝ n) cond = cong (∣_∣ₛ＝ n) (↑ₛ-refl e A cond)
+
 ↑-refl : {Γ : Ctxt}
          (e  : Γ ⊆ Γ)
          (f  : Form Γ)
@@ -1472,8 +1509,7 @@ sub-Res-↑ᵣ₁ Γ u w v r =
   cond′ : (v : 𝕍) (i : ∈Ctxt v (Γ ، 𝕍𝕌 u)) → ⊆، (𝕍𝕌 u) e i ≡ i
   cond′ .(𝕍𝕌 u) (∈Ctxt0 .Γ) = refl
   cond′ v (∈CtxtS .(𝕍𝕌 u) i) = cong (∈CtxtS (𝕍𝕌 u)) (cond _ i)
-↑-refl {Γ} e (x ∈ₐ x₁) cond = cong₂ _∈ₐ_ (↑ᵢ-refl e x cond) (↑ₛ-refl e x₁ cond)
-↑-refl {Γ} e (∣ A ∣ₛ＝ n) cond = cong (∣_∣ₛ＝ n) (↑ₛ-refl e A cond)
+↑-refl {Γ} e (𝔸 A) cond = cong 𝔸 (↑A-refl e A cond)
 --↑-refl {Γ} e (x ∈ᵢ x₁) cond = cong (_∈ᵢ x₁) (↑d-refl e x cond)
 --↑-refl {Γ} e (⟨ x ، x₁ ⟩∈ᵣ x₂) cond = cong₂ (⟨_،_⟩∈ᵣ x₂) (↑d-refl e x cond) (↑d-refl e x₁ cond)
 ↑-refl {Γ} e (f Ｕ f₁) cond = cong₂ _Ｕ_ (↑-refl e f cond) (↑-refl e f₁ cond)
@@ -1698,6 +1734,12 @@ sub-Atom-↑ₐ＋ Γ₁ Γ₂ Δ Ψ s (atAction x) = cong atAction (sub-Action-
 sub-Atom-↑ₐ＋ Γ₁ Γ₂ Δ Ψ s (atEvent x) = cong atEvent (sub-Event-↑ₑ＋ Γ₁ Γ₂ Δ Ψ s x)
 sub-Atom-↑ₐ＋ Γ₁ Γ₂ Δ Ψ s (atCorrect x) = cong atCorrect (sub-Fault-↑f＋ Γ₁ Γ₂ Δ Ψ s x)
 
+sub-SetAtom-↑A＋ : (Γ₁ Γ₂ Δ Ψ : Ctxt) (s : CSub Γ₁ Γ₂) (a : SetAtom (Γ₁ ＋ Ψ))
+                → sub-SetAtom (↑A (⊆＋،⋆ {Γ₁} {Δ} {Ψ}) a) (CSub＋ {_} {_} {Ψ} (CSub＋ s))
+                ≡ ↑A (⊆＋،⋆ {Γ₂} {Δ} {Ψ}) (sub-SetAtom a (CSub＋ s))
+sub-SetAtom-↑A＋ Γ₁ Γ₂ Δ Ψ s (x ∈ₐ x₁) = cong₂ _∈ₐ_ (sub-Agent-↑ₐ＋ Γ₁ Γ₂ Δ Ψ s x) (sub-Agents-↑ₛ＋ Γ₁ Γ₂ Δ Ψ s x₁)
+sub-SetAtom-↑A＋ Γ₁ Γ₂ Δ Ψ s (∣ A ∣ₛ＝ n) = cong (∣_∣ₛ＝ n) (sub-Agents-↑ₛ＋ Γ₁ Γ₂ Δ Ψ s A)
+
 sub-↑＋ : (Γ₁ Γ₂ Δ Ψ : Ctxt) (s : CSub Γ₁ Γ₂) (f : Form (Γ₁ ＋ Ψ))
         → sub (↑ (⊆＋،⋆ {Γ₁} {Δ} {Ψ}) f) (CSub＋ {Γ₁ ＋ Δ} {Γ₂ ＋ Δ} {Ψ} (CSub＋ {Γ₁} {Γ₂} {Δ} s))
         ≡ ↑ (⊆＋،⋆ {Γ₂} {Δ} {Ψ}) (sub f (CSub＋ {Γ₁} {Γ₂} {Ψ} s))
@@ -1710,8 +1752,7 @@ sub-↑＋ Γ₁ Γ₂ Δ Ψ s (f →· f₁) = cong₂ _→·_ (sub-↑＋ Γ�
 sub-↑＋ Γ₁ Γ₂ Δ Ψ s (¬· f) = cong ¬·_ (sub-↑＋ Γ₁ Γ₂ Δ Ψ s f)
 sub-↑＋ Γ₁ Γ₂ Δ Ψ s (∀· u f) = cong (∀· u) (sub-↑＋ Γ₁ Γ₂ Δ (Ψ ، 𝕍𝕌 u) s f)
 sub-↑＋ Γ₁ Γ₂ Δ Ψ s (∃· u f) = cong (∃· u) (sub-↑＋ Γ₁ Γ₂ Δ (Ψ ، 𝕍𝕌 u) s f)
-sub-↑＋ Γ₁ Γ₂ Δ Ψ s (x ∈ₐ x₁) = cong₂ _∈ₐ_ (sub-Agent-↑ₐ＋ Γ₁ Γ₂ Δ Ψ s x) (sub-Agents-↑ₛ＋ Γ₁ Γ₂ Δ Ψ s x₁)
-sub-↑＋ Γ₁ Γ₂ Δ Ψ s (∣ A ∣ₛ＝ n) = cong (∣_∣ₛ＝ n) (sub-Agents-↑ₛ＋ Γ₁ Γ₂ Δ Ψ s A)
+sub-↑＋ Γ₁ Γ₂ Δ Ψ s (𝔸 A) = cong 𝔸 (sub-SetAtom-↑A＋ Γ₁ Γ₂ Δ Ψ s A)
 --sub-↑＋ Γ₁ Γ₂ Δ Ψ s (x ∈ᵢ x₁) = cong (_∈ᵢ x₁) (sub-Data-↑d＋ Γ₁ Γ₂ Δ Ψ s x)
 --sub-↑＋ Γ₁ Γ₂ Δ Ψ s (⟨ x ، x₁ ⟩∈ᵣ x₂) = cong₂ (⟨_،_⟩∈ᵣ x₂) (sub-Data-↑d＋ Γ₁ Γ₂ Δ Ψ s x) (sub-Data-↑d＋ Γ₁ Γ₂ Δ Ψ s x₁)
 sub-↑＋ Γ₁ Γ₂ Δ Ψ s (f Ｕ f₁) = cong₂ _Ｕ_ (sub-↑＋ Γ₁ Γ₂ Δ Ψ s f) (sub-↑＋ Γ₁ Γ₂ Δ Ψ s f₁)
@@ -1989,6 +2030,13 @@ sub-Atom-var0 Γ Δ u (atAction x) = cong atAction (sub-Action-var0 Γ Δ u x)
 sub-Atom-var0 Γ Δ u (atEvent x) = cong atEvent (sub-Event-var0 Γ Δ u x)
 sub-Atom-var0 Γ Δ u (atCorrect x) = cong atCorrect (sub-Fault-var0 Γ Δ u x)
 
+sub-SetAtom-var0 : (Γ Δ : Ctxt) (u : 𝕍) (a : SetAtom ((Γ ، u) ＋ Δ))
+                 → sub-SetAtom (↑A (⊆،* {Γ ، u} {Γ ، u ، u} {Δ} (⊆₀، {_} {u} {u})) a)
+                               (CSub＋ {Γ ، u ، u} {Γ ، u} {Δ} (CSub،ₗ (𝕧0 {Γ} {u})))
+                 ≡ a
+sub-SetAtom-var0 Γ Δ u (a ∈ₐ A) = cong₂ _∈ₐ_ (sub-Agent-var0 Γ Δ u a) (sub-Agents-var0 Γ Δ u A)
+sub-SetAtom-var0 Γ Δ u (∣ A ∣ₛ＝ n) = cong (∣_∣ₛ＝ n) (sub-Agents-var0 Γ Δ u A)
+
 sub-var0 : (Γ Δ : Ctxt) (u : 𝕍) (f : Form ((Γ ، u) ＋ Δ))
          → sub (↑ (⊆،* {Γ ، u} {Γ ، u ، u} {Δ} (⊆₀، {_} {u} {u})) f) (CSub＋ {Γ ، u ، u} {Γ ، u} {Δ} (CSub،ₗ (𝕧0 {Γ} {u})))
          ≡ f
@@ -2001,8 +2049,7 @@ sub-var0 Γ Δ u (f →· f₁) = cong₂ _→·_ (sub-var0 Γ Δ u f) (sub-var0
 sub-var0 Γ Δ u (¬· f) = cong ¬·_ (sub-var0 Γ Δ u f)
 sub-var0 Γ Δ u (∀· u₁ f) = cong (λ x → ∀· u₁ x) (sub-var0 Γ (Δ ، 𝕍𝕌 u₁) u f)
 sub-var0 Γ Δ u (∃· u₁ f) = cong (λ x → ∃· u₁ x) (sub-var0 Γ (Δ ، 𝕍𝕌 u₁) u f)
-sub-var0 Γ Δ u (a ∈ₐ A) = cong₂ _∈ₐ_ (sub-Agent-var0 Γ Δ u a) (sub-Agents-var0 Γ Δ u A)
-sub-var0 Γ Δ u (∣ A ∣ₛ＝ n) = cong (∣_∣ₛ＝ n) (sub-Agents-var0 Γ Δ u A)
+sub-var0 Γ Δ u (𝔸 A) = cong 𝔸 (sub-SetAtom-var0 Γ Δ u A)
 --sub-var0 Γ Δ u (d ∈ᵢ p) = cong₂ _∈ᵢ_ (sub-Data-var0 Γ Δ u d) refl
 --sub-var0 Γ Δ u (⟨ d ، e ⟩∈ᵣ r) = cong₃ ⟨_،_⟩∈ᵣ_ (sub-Data-var0 Γ Δ u d) (sub-Data-var0 Γ Δ u e) refl
 sub-var0 Γ Δ u (f Ｕ f₁) = cong₂ _Ｕ_ (sub-var0 Γ Δ u f) (sub-var0 Γ Δ u f₁)

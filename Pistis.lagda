@@ -48,7 +48,7 @@ open World.World W
 
 pushing-aux₆ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form (Γ ، 𝕍Agent ، 𝕍Agents ، 𝕍Agent)
 pushing-aux₆ {Γ} q del Δ =
-  (𝕒0 ∈ₐ 𝔸1) -- for all nodes in 𝔸 that is correct
+  (𝔸 (𝕒0 ∈ₐ 𝔸1)) -- for all nodes in 𝔸 that is correct
   →· ◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]
 
 pushing-aux₅ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form (Γ ، 𝕍Agent ، 𝕍Agents ، 𝕍Agent)
@@ -62,20 +62,20 @@ pushing-aux₄ {Γ} q del Δ =
 
 pushing-aux₃ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form (Γ ، 𝕍Agent)
 pushing-aux₃ {Γ} q del Δ =
-  ∃ₛ ((∣ 𝔸0 ∣ₛ＝ q) -- there are 2f+1 (q) nodes in 𝔸0
+  ∃ₛ ((𝔸 (∣ 𝔸0 ∣ₛ＝ q)) -- there are 2f+1 (q) nodes in 𝔸0
       ∧· pushing-aux₄ q del Δ)
 
 pushing₃ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form Γ
 pushing₃ {Γ} q del Δ =
-  ∃ₛ ((∣ 𝔸0 ∣ₛ＝ q) -- there are 2f+1 (q) nodes in 𝔸0
+  ∃ₛ ((𝔸 (∣ 𝔸0 ∣ₛ＝ q)) -- there are 2f+1 (q) nodes in 𝔸0
       ∧· ∀ₐ (Correct 𝕒0
-             →· (𝕒0 ∈ₐ 𝔸1) -- for all nodes in 𝔸 that is correct
+             →· (𝔸 (𝕒0 ∈ₐ 𝔸1)) -- for all nodes in 𝔸 that is correct
              →· ◇↓◆ (↑ᵣ₁ Δ) ●[ 𝕒0 , ↑d₁ del ]))
 
 pushing₃-aux₃ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ)
               → pushing-aux₃ q del Δ ≡ ↑₀ (pushing₃ q del Δ)
 pushing₃-aux₃ {Γ} q del Δ =
-  cong (λ x → ∃ₛ ((∣ 𝔸0 ∣ₛ＝ q) ∧· ∀ₐ (Correct 𝕒0 →· (𝕒0 ∈ₐ 𝔸1) →· x)))
+  cong (λ x → ∃ₛ ((𝔸 (∣ 𝔸0 ∣ₛ＝ q)) ∧· ∀ₐ (Correct 𝕒0 →· (𝔸 (𝕒0 ∈ₐ 𝔸1)) →· x)))
        (trans (cong₂ ◇↓◆ (↑ᵣ₂≡↑ᵣ₀،،↑ᵣ₁ Δ) ((cong ●[ 𝕒0 ,_]) (↑d₂≡↑d₀،،↑d₁ del)))
               (sym (↑◇↓◆ ⊆₀،، _ _)))
 
@@ -101,7 +101,7 @@ pushing {Γ} q del Δ = □ (pushing-aux₀ q del Δ)
 
 boundedPushing-aux₆ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form (Γ ، 𝕍Agent ، 𝕍Agents ، 𝕍Agent)
 boundedPushing-aux₆ {Γ} q del Δ =
-  (𝕒0 ∈ₐ 𝔸1)
+  (𝔸 (𝕒0 ∈ₐ 𝔸1))
   →· ◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]
 
 boundedPushing-aux₅ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form (Γ ، 𝕍Agent ، 𝕍Agents ، 𝕍Agent)
@@ -114,18 +114,18 @@ boundedPushing-aux₄ {Γ} q del Δ = ◇↓◆ (↑ᵣ₁ Δ) (∀ₐ (boundedP
 
 boundedPushing-aux₃ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form (Γ ، 𝕍Agent)
 boundedPushing-aux₃ {Γ} q del Δ =
-  ∃ₛ ((∣ 𝔸0 ∣ₛ＝ q) -- there are 2f+1 (q) nodes in 𝔸0
+  ∃ₛ ((𝔸 (∣ 𝔸0 ∣ₛ＝ q)) -- there are 2f+1 (q) nodes in 𝔸0
      ∧· boundedPushing-aux₄ q del Δ)
 
 boundedPushing₅ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form (Γ ، 𝕍Agents)
 boundedPushing₅ {Γ} q del Δ =
   ∀ₐ (Correct 𝕒0
-      →· (𝕒0 ∈ₐ 𝔸1)
+      →· (𝔸 (𝕒0 ∈ₐ 𝔸1))
       →· ◇↓ (↑ᵣ₁ Δ) ●[ 𝕒0 , ↑d₁ del ])
 
 boundedPushing₄ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form (Γ ، 𝕍Agents)
 boundedPushing₄ {Γ} q del Δ =
-  (∣ 𝔸0 ∣ₛ＝ q) -- there are 2f+1 (q) nodes in 𝔸0
+  (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) -- there are 2f+1 (q) nodes in 𝔸0
   ∧· ◇↓◆ (↑ᵣ₀ Δ) (boundedPushing₅ q del Δ)
 
 boundedPushing₃ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form Γ
@@ -135,9 +135,9 @@ boundedPushing₃ {Γ} q del Δ =
 boundedPushing₃-aux₃ : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ)
                      → boundedPushing-aux₃ q del Δ ≡ ↑₀ (boundedPushing₃ q del Δ)
 boundedPushing₃-aux₃ {Γ} q del Δ =
-  cong (λ x → ∃ₛ ((∣ 𝔸0 ∣ₛ＝ q) ∧· x))
+  cong (λ x → ∃ₛ ((𝔸 (∣ 𝔸0 ∣ₛ＝ q)) ∧· x))
        (trans (cong₂ ◇↓◆ (sym (↑ᵣ₀،-↑ᵣ₀ Δ))
-                     (cong (λ x → ∀ₐ (Correct 𝕒0 →· (𝕒0 ∈ₐ 𝔸1) →· x))
+                     (cong (λ x → ∀ₐ (Correct 𝕒0 →· (𝔸 (𝕒0 ∈ₐ 𝔸1)) →· x))
                            (trans (cong₂ ◇↓ (sym (↑ᵣ₀،،-↑ᵣ₁ Δ)) (cong ●[ 𝕒0 ,_] (sym (↑d₀،،-↑d₁ del)))) (sym (↑◇↓ ⊆₀،، _ _)))))
               (sym (↑◇↓◆ ⊆₀، _ _)))
 
@@ -178,8 +178,8 @@ send-if-received {Γ} p =
 
 event-if-received-aux₀ : {Γ : Ctxt} (Q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form (Γ ، 𝕍Agent)
 event-if-received-aux₀ {Γ} Q del Δ =
-  ∃ₛ ((∣ 𝔸0 ∣ₛ＝ Q)
-      ∧· ∀ₐ ((𝕒0 ∈ₐ 𝔸1) →· ◇↓ (↑ᵣ₂ Δ) (recv[ 𝕒2 ⇐ ↑d₂ del ⇐ 𝕒0 ])))
+  ∃ₛ ((𝔸 (∣ 𝔸0 ∣ₛ＝ Q))
+      ∧· ∀ₐ ((𝔸 (𝕒0 ∈ₐ 𝔸1)) →· ◇↓ (↑ᵣ₂ Δ) (recv[ 𝕒2 ⇐ ↑d₂ del ⇐ 𝕒0 ])))
 
 event-if-received-aux₁ : {Γ : Ctxt} (Q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form Γ
 event-if-received-aux₁ {Γ} Q del Δ =
@@ -255,7 +255,7 @@ rule¬∀L-sat M Γ T R u A B (satB , _) =
 →boundedPushing0-sat M Γ q del Δ _ =
   rule∀I-sat M Γ₁ (CEr 𝟎) 𝕌Agent (boundedPushing-aux₅ q del Δ)
    (rule→I-sat M Γ₂ 𝟎 (Correct 𝕒0) (boundedPushing-aux₆ q del Δ)
-     (rule→I-sat M Γ₃ 𝟎 (𝕒0 ∈ₐ 𝔸1) (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])
+     (rule→I-sat M Γ₃ 𝟎 (𝔸 (𝕒0 ∈ₐ 𝔸1)) (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])
        (ℍ₁ , lift tt) , lift tt) , lift tt)
   where
   Γ₁ : ℂ₀
@@ -268,10 +268,10 @@ rule¬∀L-sat M Γ T R u A B (satB , _) =
   Γ₃ = ℂe Γ₂ (Correct 𝕒0) 𝟎
 
   Γ₄ : ℂ₀
-  Γ₄ = ℂe Γ₃ (𝕒0 ∈ₐ 𝔸1) 𝟎
+  Γ₄ = ℂe Γ₃ (𝔸 (𝕒0 ∈ₐ 𝔸1)) 𝟎
 
   Γ₅ : ℂ₀
-  Γ₅ = ℂe (ℂe (ℂv (ℂv (ℂv Γ 𝕍Agent) 𝕍Agents) 𝕍Agent) (Correct 𝕒0) 𝟎) (𝕒0 ∈ₐ 𝔸1) 𝟎
+  Γ₅ = ℂe (ℂe (ℂv (ℂv (ℂv Γ 𝕍Agent) 𝕍Agents) 𝕍Agent) (Correct 𝕒0) 𝟎) (𝔸 (𝕒0 ∈ₐ 𝔸1)) 𝟎
 
   Γ₆ : ℂ₀
   Γ₆ = ℂe Γ₅ (↑₀ (pushing-aux₄ q del Δ)) 𝟎
@@ -302,17 +302,17 @@ rule¬∀L-sat M Γ T R u A B (satB , _) =
                  (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]) (ℍ₆ , lift tt)) , lift tt)
 
   ℍ₄ : sat-sequent M (rseq Γ₈ 𝟎 (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
-  ℍ₄ = rule→L-sat M Γ₅ (CEr 𝟎) 𝟎 (𝕒0 ∈ₐ 𝔸1)
+  ℍ₄ = rule→L-sat M Γ₅ (CEr 𝟎) 𝟎 (𝔸 (𝕒0 ∈ₐ 𝔸1))
         (sub (↑₀، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])) (CSub،ₗ 𝕒0))
         (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])
-        (ruleLbl-sat M (ℂe (ℂv (ℂv (ℂv Γ 𝕍Agent) 𝕍Agents) 𝕍Agent) (Correct 𝕒0) 𝟎) (CEr 𝟎) (𝕒0 ∈ₐ 𝔸1) (lift tt) ,
+        (ruleLbl-sat M (ℂe (ℂv (ℂv (ℂv Γ 𝕍Agent) 𝕍Agents) 𝕍Agent) (Correct 𝕒0) 𝟎) (CEr 𝟎) (𝔸 (𝕒0 ∈ₐ 𝔸1)) (lift tt) ,
          ℍ₅ ,
          lift tt)
 
   ℍ₃ : sat-sequent M (rseq Γ₇ 𝟎 (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
   ℍ₃ = rule→L-sat M Γ₅ (CEr 𝟎) 𝟎 (Correct 𝕒0) (sub (↑₀، (pushing-aux₆ q del Δ)) (CSub،ₗ 𝕒0)) (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])
          (rule-thin-sat M
-           (ℂe (ℂv (ℂv (ℂv Γ 𝕍Agent) 𝕍Agents) 𝕍Agent) (Correct 𝕒0) 𝟎) (𝕒0 ∈ₐ 𝔸1) (CEr 𝟎) (CEr 𝟎) (Correct 𝕒0)
+           (ℂe (ℂv (ℂv (ℂv Γ 𝕍Agent) 𝕍Agents) 𝕍Agent) (Correct 𝕒0) 𝟎) (𝔸 (𝕒0 ∈ₐ 𝔸1)) (CEr 𝟎) (CEr 𝟎) (Correct 𝕒0)
            (ruleLbl-sat M (ℂv (ℂv (ℂv Γ 𝕍Agent) 𝕍Agents) 𝕍Agent) (CEr 𝟎) (Correct 𝕒0)
              (lift tt) , lift tt) ,
           ℍ₄ ,
@@ -327,7 +327,7 @@ rule¬∀L-sat M Γ T R u A B (satB , _) =
 
   ℍ₁ : sat-sequent M (rseq Γ₄ 𝟎 (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
   ℍ₁ = rule-move-sat M (ℂv (ℂv Γ 𝕍Agent) 𝕍Agents)
-        (ℂe (ℂe (ℂv ℂ⟨⟩ 𝕍Agent) (Correct 𝕒0) 𝟎) (𝕒0 ∈ₐ 𝔸1) 𝟎)
+        (ℂe (ℂe (ℂv ℂ⟨⟩ 𝕍Agent) (Correct 𝕒0) 𝟎) (𝔸 (𝕒0 ∈ₐ 𝔸1)) 𝟎)
         (pushing-aux₄ q del Δ) (CEr 𝟎) (CEr 𝟎) (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])
         (ℍ₂ , lift tt)
 
@@ -374,10 +374,10 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
   𝔾Γ₇ = ℂe Γ₆ (↑₀، (pushing-aux₃ q del Δ)) 𝕣₁
 
   𝔾Γ₈ : ℂ₀
-  𝔾Γ₈ = ℂe (ℂv Γ₆ 𝕍Agents) ((∣ 𝔸0 ∣ₛ＝ q) ∧· ↑₀،، (pushing-aux₄ q del Δ)) 𝕣₂
+  𝔾Γ₈ = ℂe (ℂv Γ₆ 𝕍Agents) ((𝔸 (∣ 𝔸0 ∣ₛ＝ q)) ∧· ↑₀،، (pushing-aux₄ q del Δ)) 𝕣₂
 
   𝔾Γ₉ : ℂ₀
-  𝔾Γ₉ = ℂe (ℂe (ℂv Γ₆ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₂) (↑₀،، (pushing-aux₄ q del Δ)) 𝕣₂
+  𝔾Γ₉ = ℂe (ℂe (ℂv Γ₆ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₂) (↑₀،، (pushing-aux₄ q del Δ)) 𝕣₂
 
   𝔾Γ₁₀ : ℂ₀
   𝔾Γ₁₀ = ℂe 𝔾Γ₉ (↑₀،، (boundedPushing-aux₄ q del Δ)) 𝕣₂
@@ -392,13 +392,13 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
   𝔾Γ₁₃ = ℂe 𝔾Γ₉ (■ (¬· (∀ₐ (↑₀،،، (boundedPushing-aux₅ q del Δ))))) 𝕣₂
 
   𝔾Γ₁₄ : ℂ₀
-  𝔾Γ₁₄ = ℂe (ℂe (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝕒0 ∈ₐ 𝔸1) 𝕣₃) (¬· ↑₀،،، (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])) 𝕣₃
+  𝔾Γ₁₄ = ℂe (ℂe (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝔸 (𝕒0 ∈ₐ 𝔸1)) 𝕣₃) (¬· ↑₀،،، (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])) 𝕣₃
 
   ℍΓ₁₅ : ℂ₀
   ℍΓ₁₅ = ℂe (ℂe 𝔾Γ₁₄ (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])) 𝕣₃) (◆· (↑₀،،، ●[ 𝕒0 , ↑d₂ del ])) 𝕣₃
 
   𝕘Γ   : ℂ₀
-  𝕘Γ   = ℂe (ℂe (ℂv (ℂe (ℂv Γ₆ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₂) 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝕒0 ∈ₐ 𝔸1) 𝕣₃
+  𝕘Γ   = ℂe (ℂe (ℂv (ℂe (ℂv Γ₆ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₂) 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝔸 (𝕒0 ∈ₐ 𝔸1)) 𝕣₃
 
   𝔾Γ₁₅ : ℂ₀
   𝔾Γ₁₅ = ℂe 𝕘Γ (↑₀ (↑₀،، (pushing-aux₄ q del Δ))) 𝕣₃
@@ -424,12 +424,12 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
   𝔽Γ₁₂ : ℂ₀
   𝔽Γ₁₂ = ℂe Γ₆ (sub (↑ (⊆، 𝕍Agent ⊆₁) (pushing-aux₃ q del Δ)) (CSub،ₗ 𝕒0)) 𝕣₁
 
-  𝔼𝟙𝟙 : sat-sequent M (rseq 𝔾Γ₁₀ 𝕣₂ (∣ 𝔸0 ∣ₛ＝ q))
-  𝔼𝟙𝟙 = rule-thin-sat M 𝔾Γ₉ (↑₀،، (boundedPushing-aux₄ q del Δ)) (CEr 𝕣₂) (CEr 𝕣₂) (∣ 𝔸0 ∣ₛ＝ q)
-                     (rule-thin-sat M (ℂe (ℂv Γ₆ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₂)
+  𝔼𝟙𝟙 : sat-sequent M (rseq 𝔾Γ₁₀ 𝕣₂ (𝔸 (∣ 𝔸0 ∣ₛ＝ q)))
+  𝔼𝟙𝟙 = rule-thin-sat M 𝔾Γ₉ (↑₀،، (boundedPushing-aux₄ q del Δ)) (CEr 𝕣₂) (CEr 𝕣₂) (𝔸 (∣ 𝔸0 ∣ₛ＝ q))
+                     (rule-thin-sat M (ℂe (ℂv Γ₆ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₂)
                        (↑₀،، (pushing-aux₄ q del Δ)) (CEr 𝕣₂) (CEr 𝕣₂)
-                       (∣ 𝔸0 ∣ₛ＝ q)
-                       ((ruleLbl-sat M (ℂv Γ₆ 𝕍Agents) (CEr 𝕣₂) (∣ 𝔸0 ∣ₛ＝ q)
+                       (𝔸 (∣ 𝔸0 ∣ₛ＝ q))
+                       ((ruleLbl-sat M (ℂv Γ₆ 𝕍Agents) (CEr 𝕣₂) (𝔸 (∣ 𝔸0 ∣ₛ＝ q))
                          (lift tt))
                        , (lift tt))
                      , (lift tt))
@@ -439,13 +439,13 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
               (sym (sub-var0₀ _ 𝕍Agents (↑₀،، (boundedPushing-aux₄ q del Δ))))
               (ruleLbl-sat M 𝔾Γ₉ (CEr 𝕣₂) (↑₀،، (boundedPushing-aux₄ q del Δ)) (lift tt))
 
-  𝔼𝟙𝟘 : sat-sequent M (rseq 𝔾Γ₁₀ 𝕣₂ ((∣ 𝔸0 ∣ₛ＝ q) ∧· sub (↑₀، (↑₀،، (boundedPushing-aux₄ q del Δ))) (CSub،ₗ 𝔸0)))
-  𝔼𝟙𝟘 = rule∧I-sat M 𝔾Γ₁₀ (CEr 𝕣₂) (∣ 𝔸0 ∣ₛ＝ q) (sub (↑₀، (↑₀،، (boundedPushing-aux₄ q del Δ))) (CSub،ₗ 𝔸0))
+  𝔼𝟙𝟘 : sat-sequent M (rseq 𝔾Γ₁₀ 𝕣₂ ((𝔸 (∣ 𝔸0 ∣ₛ＝ q)) ∧· sub (↑₀، (↑₀،، (boundedPushing-aux₄ q del Δ))) (CSub،ₗ 𝔸0)))
+  𝔼𝟙𝟘 = rule∧I-sat M 𝔾Γ₁₀ (CEr 𝕣₂) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) (sub (↑₀، (↑₀،، (boundedPushing-aux₄ q del Δ))) (CSub،ₗ 𝔸0))
                    (𝔼𝟙𝟙 , 𝔼𝟙𝟚 , (lift tt))
 
-  𝔼𝟡 : sat-sequent M (rseq 𝔾Γ₁₀ 𝕣₂ (∃ₛ ((∣ 𝔸0 ∣ₛ＝ q) ∧· ↑₀، (↑₀،، (boundedPushing-aux₄ q del Δ)))))
+  𝔼𝟡 : sat-sequent M (rseq 𝔾Γ₁₀ 𝕣₂ (∃ₛ ((𝔸 (∣ 𝔸0 ∣ₛ＝ q)) ∧· ↑₀، (↑₀،، (boundedPushing-aux₄ q del Δ)))))
   𝔼𝟡 = rule∃R-sat
-         M 𝔾Γ₁₀ (CEr 𝕣₂) 𝕌Agents ((∣ 𝔸0 ∣ₛ＝ q) ∧· ↑₀، (↑₀،، (boundedPushing-aux₄ q del Δ)))
+         M 𝔾Γ₁₀ (CEr 𝕣₂) 𝕌Agents ((𝔸 (∣ 𝔸0 ∣ₛ＝ q)) ∧· ↑₀، (↑₀،، (boundedPushing-aux₄ q del Δ)))
          𝔸0
          (𝔼𝟙𝟘 , lift tt)
 
@@ -466,15 +466,15 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
                   (rule→L-sat M 𝕘Γ (CEr 𝕣₃) 𝕣₃ (Correct 𝕒0) (↑₀،،، (pushing-aux₆ q del Δ))
                     (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
                     (rule-thin-sat M
-                      (ℂe (ℂv (ℂe (ℂv Γ₆ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₂) 𝕍Agent) (Correct 𝕒0) 𝕣₃)
-                      (𝕒0 ∈ₐ 𝔸1) (CEr 𝕣₃) (CEr 𝕣₃) (Correct 𝕒0)
-                      (ruleLbl-sat M (ℂv (ℂe (ℂv Γ₆ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₂) 𝕍Agent) (CEr 𝕣₃) (Correct 𝕒0) (lift tt) , lift tt) ,
-                     rule→L-sat M 𝕘Γ (CEr 𝕣₃) 𝕣₃ (𝕒0 ∈ₐ 𝔸1)
+                      (ℂe (ℂv (ℂe (ℂv Γ₆ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₂) 𝕍Agent) (Correct 𝕒0) 𝕣₃)
+                      (𝔸 (𝕒0 ∈ₐ 𝔸1)) (CEr 𝕣₃) (CEr 𝕣₃) (Correct 𝕒0)
+                      (ruleLbl-sat M (ℂv (ℂe (ℂv Γ₆ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₂) 𝕍Agent) (CEr 𝕣₃) (Correct 𝕒0) (lift tt) , lift tt) ,
+                     rule→L-sat M 𝕘Γ (CEr 𝕣₃) 𝕣₃ (𝔸 (𝕒0 ∈ₐ 𝔸1))
                       (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
                       (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
                       (ruleLbl-sat M
-                        (ℂe (ℂv (ℂe (ℂv Γ₆ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₂) 𝕍Agent) (Correct 𝕒0) 𝕣₃)
-                        (CEr 𝕣₃) (𝕒0 ∈ₐ 𝔸1) (lift tt) ,
+                        (ℂe (ℂv (ℂe (ℂv Γ₆ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₂) 𝕍Agent) (Correct 𝕒0) 𝕣₃)
+                        (CEr 𝕣₃) (𝔸 (𝕒0 ∈ₐ 𝔸1)) (lift tt) ,
                        ruleLbl-sat M 𝕘Γ (CEr 𝕣₃) (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])) (lift tt) ,
                        lift tt) ,
                      lift tt) , lift tt)) , lift tt)
@@ -485,38 +485,38 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
          (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])) 𝕒0
          (𝔾𝟙𝟞 , lift tt)
 
-  𝔾𝟙𝟜 : sat-sequent M (rseq (ℂe (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝕒0 ∈ₐ 𝔸1) 𝕣₃) 𝕣₃ (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])))
-  𝔾𝟙𝟜 = rule-move-sat M (ℂe (ℂv Γ₆ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₂)
-         (ℂe (ℂe (ℂv ℂ⟨⟩ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝕒0 ∈ₐ 𝔸1) 𝕣₃)
+  𝔾𝟙𝟜 : sat-sequent M (rseq (ℂe (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝔸 (𝕒0 ∈ₐ 𝔸1)) 𝕣₃) 𝕣₃ (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])))
+  𝔾𝟙𝟜 = rule-move-sat M (ℂe (ℂv Γ₆ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₂)
+         (ℂe (ℂe (ℂv ℂ⟨⟩ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝔸 (𝕒0 ∈ₐ 𝔸1)) 𝕣₃)
          (↑₀،، (pushing-aux₄ q del Δ)) (CEr 𝕣₂) (CEr 𝕣₃)
          (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
          (𝔾𝟙𝟝 , lift tt)
 
   ℍ𝟚𝟛 : sat-sequent M (rseq (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (↑₂، (boundedPushing₄ q del Δ)) 𝕣₁) 𝕣₃ (↑₂، (boundedPushing₄ q del Δ)))
-  ℍ𝟚𝟛 = rule∧E-sat M (ℂv ℍΓ₁₉ 𝕍Agents) (CEr 𝕣₃) (CEr 𝕣₁) (∣ 𝔸0 ∣ₛ＝ q)
+  ℍ𝟚𝟛 = rule∧E-sat M (ℂv ℍΓ₁₉ 𝕍Agents) (CEr 𝕣₃) (CEr 𝕣₁) (𝔸 (∣ 𝔸0 ∣ₛ＝ q))
          (↑₂، (◇↓◆ (↑ᵣ₀ Δ) (boundedPushing₅ q del Δ)))
          (↑₂، (boundedPushing₄ q del Δ))
          (rule∧I-sat M
-           (ℂe (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₁) (↑₂، (◇↓◆ (↑ᵣ₀ Δ) (boundedPushing₅ q del Δ))) 𝕣₁)
-           (CEr 𝕣₃) (∣ 𝔸0 ∣ₛ＝ q) (↑₂، (◇↓◆ (↑ᵣ₀ Δ) (boundedPushing₅ q del Δ)))
-           (rule-thin-sat M (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₁)
+           (ℂe (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₁) (↑₂، (◇↓◆ (↑ᵣ₀ Δ) (boundedPushing₅ q del Δ))) 𝕣₁)
+           (CEr 𝕣₃) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) (↑₂، (◇↓◆ (↑ᵣ₀ Δ) (boundedPushing₅ q del Δ)))
+           (rule-thin-sat M (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₁)
              (↑₂، (◇↓◆ (↑ᵣ₀ Δ) (boundedPushing₅ q del Δ))) (CEr 𝕣₁) (CEr 𝕣₃)
-             (∣ 𝔸0 ∣ₛ＝ q)
+             (𝔸 (∣ 𝔸0 ∣ₛ＝ q))
              (rule-size-change-resources-sat M
-               (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₁) 𝕣₃ 𝕣₁ 𝔸0 q
-               (ruleLbl-sat M (ℂv ℍΓ₁₉ 𝕍Agents) (CEr 𝕣₁) (∣ 𝔸0 ∣ₛ＝ q) (lift tt) , lift tt) , lift tt) ,
-            subst (λ x → sat-sequent M (rseq (ℂe (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₁) x 𝕣₁) 𝕣₃ x))
+               (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₁) 𝕣₃ 𝕣₁ 𝔸0 q
+               (ruleLbl-sat M (ℂv ℍΓ₁₉ 𝕍Agents) (CEr 𝕣₁) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) (lift tt) , lift tt) , lift tt) ,
+            subst (λ x → sat-sequent M (rseq (ℂe (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₁) x 𝕣₁) 𝕣₃ x))
                   (sym (↑◇↓◆ ⊆₂، (↑ᵣ₀ Δ) (boundedPushing₅ q del Δ)))
                   (◇↓◆⊑-sat M
-                    (ℂe (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₁) (◇↓◆ (↑ᵣ₂، (↑ᵣ₀ Δ)) (↑₂، (boundedPushing₅ q del Δ))) 𝕣₁)
+                    (ℂe (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₁) (◇↓◆ (↑ᵣ₂، (↑ᵣ₀ Δ)) (↑₂، (boundedPushing₅ q del Δ))) 𝕣₁)
                     𝕣₃ 𝕣₁ 𝕣₃ (↑ᵣ₂، (↑ᵣ₀ Δ)) (↑₂، (boundedPushing₅ q del Δ))
-                    (ruleLbl-sat M (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₁) (CEr 𝕣₁)
+                    (ruleLbl-sat M (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₁) (CEr 𝕣₁)
                       (◇↓◆ (↑ᵣ₂، (↑ᵣ₀ Δ)) (↑₂، (boundedPushing₅ q del Δ)))
                       (lift tt) ,
-                     rule-thin-sat M (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₁)
+                     rule-thin-sat M (ℂe (ℂv ℍΓ₁₉ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₁)
                       (◇↓◆ (↑ᵣ₂، (↑ᵣ₀ Δ)) (↑₂، (boundedPushing₅ q del Δ))) (CEr 𝕣₁) (CEr 𝕣₃)
                       (𝕣₁ ⊑ 𝕣₃)
-                      (rule-thin-sat M (ℂv ℍΓ₁₉ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) (CEr 𝕣₁) (CEr 𝕣₃) (𝕣₁ ⊑ 𝕣₃)
+                      (rule-thin-sat M (ℂv ℍΓ₁₉ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) (CEr 𝕣₁) (CEr 𝕣₃) (𝕣₁ ⊑ 𝕣₃)
                         (rule-thin-v-sat M ℍΓ₁₉ 𝕍Agents 𝕣₂ (𝕣₀ ⊑ 𝕣₂)
                           (⊏→⊑-sat M ℍΓ₁₉ 𝕣₀ 𝕣₂ 𝕣₂
                             (rule-id-comp-u-sat M
@@ -684,11 +684,11 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
          (◆· (↑₀،،، ●[ 𝕒0 , ↑d₂ del ])) (CEr 𝕣₃) (CEr 𝕣₃) (CEr 𝕣₃)
          (↑₀ (↑₀ (↑₀، (boundedPushing-aux₃ q del Δ))))
          (rule-thin1-sat M
-           (ℂe (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝕒0 ∈ₐ 𝔸1) 𝕣₃)
+           (ℂe (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝔸 (𝕒0 ∈ₐ 𝔸1)) 𝕣₃)
            (¬· ↑₀،،، (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
            (◆· (↑₀،،، ●[ 𝕒0 , ↑d₂ del ])) (CEr 𝕣₃) (CEr 𝕣₃) (CEr 𝕣₃)
            (↑₀ (↑₀ (↑₀، (boundedPushing-aux₃ q del Δ))))
-           (rule-thin1-sat M (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝕒0 ∈ₐ 𝔸1)
+           (rule-thin1-sat M (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝔸 (𝕒0 ∈ₐ 𝔸1))
              (◆· (↑₀،،، ●[ 𝕒0 , ↑d₂ del ])) (CEr 𝕣₃) (CEr 𝕣₃) (CEr 𝕣₃)
              (↑₀ (↑₀ (↑₀، (boundedPushing-aux₃ q del Δ))))
              (move-to-concl-ext-sat M {ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃} 𝕣₃
@@ -698,10 +698,10 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
                  (◆· (↑₀،،، ●[ 𝕒0 , ↑d₂ del ]) →· ↑₀ (↑₀ (↑₀، (boundedPushing-aux₃ q del Δ))))
                  (move-to-concl-v-sat M 𝔾Γ₉ 𝕌Agent 𝕣₂
                    (Correct 𝕒0 →· ◆· (↑₀،،، ●[ 𝕒0 , ↑d₂ del ]) →· ↑₀ (↑₀ (↑₀، (boundedPushing-aux₃ q del Δ))))
-                   (rule-thin-sat M (ℂe (ℂv Γ₆ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) 𝕣₂)
+                   (rule-thin-sat M (ℂe (ℂv Γ₆ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) 𝕣₂)
                      (↑₀،، (pushing-aux₄ q del Δ)) (CEr 𝕣₂) (CEr 𝕣₂)
                      (∀ₐ (Correct 𝕒0 →· ◆· (↑₀،،، ●[ 𝕒0 , ↑d₂ del ]) →· ↑₀ (↑₀ (↑₀، (boundedPushing-aux₃ q del Δ)))))
-                     (rule-thin-sat M (ℂv Γ₆ 𝕍Agents) (∣ 𝔸0 ∣ₛ＝ q) (CEr 𝕣₂) (CEr 𝕣₂)
+                     (rule-thin-sat M (ℂv Γ₆ 𝕍Agents) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) (CEr 𝕣₂) (CEr 𝕣₂)
                        (∀ₐ (Correct 𝕒0 →· ◆· (●[ 𝕒0 , ↑d₀،،، (↑d₂ del) ]) →· ↑₀ (↑₀ (↑₀، (boundedPushing-aux₃ q del Δ)))))
                        (subst₂ (λ x y → sat-sequent M (rseq (ℂv Γ₆ 𝕍Agents) 𝕣₂ (∀ₐ (Correct 𝕒0 →· ◆· ●[ 𝕒0 , x ] →· y))))
                                (↑d₃≡↑d₀،،،↑d₂ del) (↑₀،↑₀ (↑₀، (boundedPushing-aux₃ q del Δ)))
@@ -723,7 +723,7 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
                      (rule-thin-sat M 𝔾Γ₁₄ (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
                        (CEr 𝕣₃) (CEr 𝕣₃) (¬· ↑₀،،، (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
                        (ruleLbl-sat M
-                         (ℂe (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝕒0 ∈ₐ 𝔸1) 𝕣₃) (CEr 𝕣₃)
+                         (ℂe (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝔸 (𝕒0 ∈ₐ 𝔸1)) 𝕣₃) (CEr 𝕣₃)
                          (¬· ↑₀،،، (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])) (lift tt) , lift tt))) , lift tt) ,
             subst (λ x → sat-sequent M (rseq (ℂe 𝔾Γ₁₄ (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])) 𝕣₃) 𝕣₃ x))
                   (↑◇↓◆ ⊆₀،،، (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])
@@ -742,7 +742,7 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
          (↑₀ (↑₀ (↑₀، (boundedPushing-aux₃ q del Δ))))
          (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
          (rule-thin-sat M
-           (ℂe (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝕒0 ∈ₐ 𝔸1) 𝕣₃)
+           (ℂe (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) (𝔸 (𝕒0 ∈ₐ 𝔸1)) 𝕣₃)
            (¬· ↑₀،،، (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ])) (CEr 𝕣₃) (CEr 𝕣₃)
            (↑₀،،، (◇↓◆ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
            (𝔾𝟙𝟜 , lift tt) ,
@@ -763,7 +763,7 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
                (↑₀،،، (boundedPushing-aux₆ q del Δ))
                (↑₀ (↑₀ (↑₀، (boundedPushing-aux₃ q del Δ))))
                (rule¬→L-sat M (ℂe (ℂv 𝔾Γ₉ 𝕍Agent) (Correct 𝕒0) 𝕣₃) 𝕣₃ 𝕣₃
-                 (𝕒0 ∈ₐ 𝔸1) (↑₀،،، (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
+                 (𝔸 (𝕒0 ∈ₐ 𝔸1)) (↑₀،،، (◇↓ (↑ᵣ₂ Δ) ●[ 𝕒0 , ↑d₂ del ]))
                  (↑₀ (↑₀ (↑₀، (boundedPushing-aux₃ q del Δ))))
                  (𝔾𝟙𝟛 , lift tt) , lift tt) , lift tt) , lift tt) , lift tt)
 
@@ -795,13 +795,13 @@ pistis1-true L M {Γ} Δ q del (hyp1 , hyp2 , _) =
           lift tt)
 
   𝔾𝟟 : sat-sequent M (rseq 𝔾Γ₈ 𝕣₂ (↑₀ (↑ ⊆₀، (boundedPushing-aux₃ q del Δ))))
-  𝔾𝟟 = rule∧E-sat M (ℂv Γ₆ 𝕍Agents) (CEr 𝕣₂) (CEr 𝕣₂) (∣ 𝔸0 ∣ₛ＝ q) (↑ ⊆₀،، (pushing-aux₄ q del Δ))
+  𝔾𝟟 = rule∧E-sat M (ℂv Γ₆ 𝕍Agents) (CEr 𝕣₂) (CEr 𝕣₂) (𝔸 (∣ 𝔸0 ∣ₛ＝ q)) (↑ ⊆₀،، (pushing-aux₄ q del Δ))
          (↑₀ (↑ ⊆₀، (boundedPushing-aux₃ q del Δ)))
          (𝔾𝟠 , lift tt)
 
   𝔾𝟞 : sat-sequent M (rseq 𝔾Γ₇ 𝕣₁ (↑ ⊆₀، (boundedPushing-aux₃ q del Δ))) -- from the last assumption
   𝔾𝟞 = rule∃L-sat M Γ₆ (CEr 𝕣₁) 𝕣₁ 𝕌Agents
-         ((∣ 𝔸0 ∣ₛ＝ q) ∧· ↑ ⊆₀،، (pushing-aux₄ q del Δ))
+         ((𝔸 (∣ 𝔸0 ∣ₛ＝ q)) ∧· ↑ ⊆₀،، (pushing-aux₄ q del Δ))
          (↑ ⊆₀، (boundedPushing-aux₃ q del Δ))
          (𝔾𝟟 , lift tt)
 

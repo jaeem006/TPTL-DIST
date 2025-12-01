@@ -215,6 +215,12 @@ m ≥ₜ t = t ≼ Model.w m
 len : {Γ : Ctxt} → Agents Γ → ℕ
 len A = 0
 --}
+_⊨A_ : {Γ : Ctxt} → Model Γ → SetAtom Γ → Set
+m ⊨A (a ∈ₐ A) = (⟦ a ⟧ᵢ· m) ∈ (⟦ A ⟧ₛ· m)
+--m ⊨ (d ∈ᵢ D) = Lift _ (D (⟦ d ⟧d· m))
+--m ⊨ (⟨ d ، e ⟩∈ᵣ D) =  Lift _ (D (⟦ d ⟧d· m) (⟦ e ⟧d· m))
+m ⊨A (∣ A ∣ₛ＝ n) = length (⟦ A ⟧ₛ· m) ≡ n
+
 
 _⊨_ : {Γ : Ctxt} → Model Γ → Form Γ → Set₁
 -- Propositional
@@ -228,10 +234,7 @@ m ⊨ (¬· f) =  ¬ (m ⊨ f)
 -- Predicate
 m ⊨ ∀· u f = (v : ⟦𝕌⟧ u {--C⟦𝕌⟧ Γ u--}) → (m ≔ v) ⊨ f
 m ⊨ ∃· u f = Σ (⟦𝕌⟧ u) (λ v → (m ≔ v) ⊨ f)
-m ⊨ (a ∈ₐ A) = Lift _ ((⟦ a ⟧ᵢ· m) ∈ (⟦ A ⟧ₛ· m))
---m ⊨ (d ∈ᵢ D) = Lift _ (D (⟦ d ⟧d· m))
---m ⊨ (⟨ d ، e ⟩∈ᵣ D) =  Lift _ (D (⟦ d ⟧d· m) (⟦ e ⟧d· m))
-m ⊨ (∣ A ∣ₛ＝ n) = Lift _ (length (⟦ A ⟧ₛ· m) ≡ n)
+m ⊨ 𝔸 A = Lift _ (m ⊨A A)
 -- Temporal
 m ⊨ (f Ｕ f₁) =  ∃ (λ t → m ≤ₜ t × (m ≔ₜ t) ⊨ f₁ × ((t′ : 𝕎) → m ≤ₜ t′ → t′ ≺ t → ( (m  ≔ₜ t′) ⊨ f)))
 m ⊨ Ｏ f = ∃ λ t →  Model.w m ◃ t × (m ≔ₜ t) ⊨ f
@@ -563,6 +566,26 @@ sat-rule M (rule Premises Conclusion) = sat-sequents M Premises → sat-sequent 
 --⟦⊆⟧ᵣ {Γ} {Δ} m e s ⊆s (𝐬 a) = cong 𝕤 (⟦⊆⟧ᵣ m e s ⊆s a)
 ⟦⊆⟧ᵣ {Γ} {Δ} m e s ⊆s (a ⋆ a₁) = cong₂ _·_ (⟦⊆⟧ᵣ m e s ⊆s a) (⟦⊆⟧ᵣ m e s ⊆s a₁)
 
+⊨A-↑⊆→ : {Γ Δ : Ctxt} {M : Model Γ} {a : SetAtom Γ} (s : Sub Δ)
+         (e : Γ ⊆ Δ)
+       → Sub⊆ e (Model.subΓ M) s
+       → (M ≔ₛ s) ⊨A (↑A e a)
+       → M ⊨A a
+⊨A-↑⊆→ {Γ} {Δ} {m} {x ∈ₐ x₁} s e ⊆s h =
+  subst₂ (λ x y → y ∈ x) (⟦⊆⟧ₛ (Model.subΓ m) e s ⊆s x₁) (⟦⊆⟧ᵢ (Model.subΓ m) e s ⊆s x) h
+⊨A-↑⊆→ {Γ} {Δ} {m} {∣ A ∣ₛ＝ n} s e ⊆s h =
+  trans (cong length (sym (⟦⊆⟧ₛ (Model.subΓ m) e s ⊆s A))) h
+
+→⊨A-↑⊆ : {Γ Δ : Ctxt} {M : Model Γ} {a : SetAtom Γ} (s : Sub Δ)
+         (e : Γ ⊆ Δ)
+       → Sub⊆ e (Model.subΓ M) s
+       → M ⊨A a
+       → (M ≔ₛ s) ⊨A (↑A e a)
+→⊨A-↑⊆ {Γ} {Δ} {m} {x ∈ₐ x₁} s e ⊆s h =
+  subst₂ (λ x y → y ∈ x) (sym (⟦⊆⟧ₛ (Model.subΓ m) e s ⊆s x₁)) (sym (⟦⊆⟧ᵢ (Model.subΓ m) e s ⊆s x)) h
+→⊨A-↑⊆ {Γ} {Δ} {m} {∣ A ∣ₛ＝ n} s e ⊆s h =
+  trans (cong length (⟦⊆⟧ₛ (Model.subΓ m) e s ⊆s A)) h
+
 mutual
   ⊨-↑⊆→ : {Γ Δ : Ctxt} {M : Model Γ} {F : Form Γ} (s : Sub Δ)
           (e : Γ ⊆ Δ)
@@ -591,10 +614,8 @@ mutual
     ⊨-↑⊆→ {Γ ، 𝕍𝕌 u} {Δ ، 𝕍𝕌 u} {m ≔ v} {F} (s ⹁ 𝕍𝕌 u ∶ v) (⊆، (𝕍𝕌 u) e)
           (Sub⊆-⊆، ⊆s)
           h
-  ⊨-↑⊆→ {Γ} {Δ} {m} {x ∈ₐ x₁} s e ⊆s (lift h) =
-    lift (subst₂ (λ x y → y ∈ x) (⟦⊆⟧ₛ (Model.subΓ m) e s ⊆s x₁) (⟦⊆⟧ᵢ (Model.subΓ m) e s ⊆s x) h)
-  ⊨-↑⊆→ {Γ} {Δ} {m} {∣ A ∣ₛ＝ n} s e ⊆s (lift h) =
-    lift  (trans (cong length (sym (⟦⊆⟧ₛ (Model.subΓ m) e s ⊆s A))) h)
+  ⊨-↑⊆→ {Γ} {Δ} {m} {𝔸 A} s e ⊆s (lift h) =
+    lift (⊨A-↑⊆→ {Γ} {Δ} {m} {A} (s) e ⊆s h)
 --  ⊨-↑⊆→ {Γ} {Δ} {m} {x ∈ᵢ x₁} s e ⊆s (lift h) =
 --    lift (subst x₁ (⟦⊆⟧d (Model.subΓ m) e s ⊆s x) h)
 --  ⊨-↑⊆→ {Γ} {Δ} {m} {⟨ x ، x₁ ⟩∈ᵣ x₂} s e ⊆s (lift h) =
@@ -660,10 +681,8 @@ mutual
     →⊨-↑⊆ {Γ ، 𝕍𝕌 u} {Δ ، 𝕍𝕌 u} {m ≔ v} {F} (s ⹁ 𝕍𝕌 u ∶ v) (⊆، (𝕍𝕌 u) e)
           (Sub⊆-⊆، ⊆s)
           h
-  →⊨-↑⊆ {Γ} {Δ} {m} {x ∈ₐ x₁} s e ⊆s (lift h) =
-    lift (subst₂ (λ x y → y ∈ x) (sym (⟦⊆⟧ₛ (Model.subΓ m) e s ⊆s x₁)) (sym (⟦⊆⟧ᵢ (Model.subΓ m) e s ⊆s x)) h)
-  →⊨-↑⊆ {Γ} {Δ} {m} {∣ A ∣ₛ＝ n} s e ⊆s (lift h) =
-    lift (trans (cong length (⟦⊆⟧ₛ (Model.subΓ m) e s ⊆s A)) h)
+  →⊨-↑⊆ {Γ} {Δ} {m} {𝔸 A} s e ⊆s (lift h) =
+    lift (→⊨A-↑⊆ {Γ} {Δ} {m} {A} s e ⊆s h)
 --  →⊨-↑⊆ {Γ} {Δ} {m} {x ∈ᵢ x₁} s e ⊆s (lift h) =
 --    lift (subst x₁ (sym (⟦⊆⟧d (Model.subΓ m) e s ⊆s x)) h)
 --  →⊨-↑⊆ {Γ} {Δ} {m} {⟨ x ، x₁ ⟩∈ᵣ x₂} s e ⊆s (lift h) =
@@ -1054,6 +1073,28 @@ w-≔= {Γ} {.(_ ، u)} m (s ⹁ u ∶ v) = w-≔= m s
 ≔=-≔ₜ {Γ} {.⟨⟩} (model interp run w subΓ) ● t = refl
 ≔=-≔ₜ {Γ} {.(_ ، u)} m (s ⹁ u ∶ v) t = trans (≔-≔ₜ (m ≔= s) v t) (cong (λ z → z ≔ v) (≔=-≔ₜ m s t))
 
+≔→sub-SetAtom-gen : (Γ Δ : Ctxt) {m : Model Γ} {u : 𝕍}
+                    (A : SetAtom ((Γ ، u) ＋ Δ))
+                    (v : C⟦𝕍⟧ Γ u)
+                    (s : Sub Δ)
+                  → ((m ≔ ⟦ u ، v ⟧c· m) ≔= s) ⊨A A
+                  → (m ≔= s) ⊨A sub-SetAtom A (CSub،＋ v)
+≔→sub-SetAtom-gen Γ Δ {m} {u} (x ∈ₐ x₁) v s h =
+  subst₂ (λ a b → b ∈ a) (sym (≔→sub-agents m s v x₁)) (sym (≔→sub-agent m s v x)) h
+≔→sub-SetAtom-gen Γ Δ {m} {u} (∣ A ∣ₛ＝ n) v s h =
+  trans (cong length (≔→sub-agents m s v A)) h
+
+≔→sub-SetAtom-gen-rev : (Γ Δ : Ctxt) {m : Model Γ} {u : 𝕍}
+                        (A : SetAtom ((Γ ، u) ＋ Δ))
+                        (v : C⟦𝕍⟧ Γ u)
+                        (s : Sub Δ)
+                      → (m ≔= s) ⊨A sub-SetAtom A (CSub،＋ v)
+                      → ((m ≔ ⟦ u ، v ⟧c· m) ≔= s) ⊨A A
+≔→sub-SetAtom-gen-rev Γ Δ {m} {u} (x ∈ₐ x₁) v s h =
+  subst₂ (λ a b → b ∈ a) (≔→sub-agents m s v x₁) (≔→sub-agent m s v x) h
+≔→sub-SetAtom-gen-rev Γ Δ {m} {u} (∣ A ∣ₛ＝ n) v s h =
+  trans (cong length (sym (≔→sub-agents m s v A))) h
+
 mutual
   ≔→sub-gen : (Γ Δ : Ctxt) {m : Model Γ} {u : 𝕍}
               (A : Form ((Γ ، u) ＋ Δ))
@@ -1090,10 +1131,8 @@ mutual
     ≔→sub-gen Γ (Δ ، 𝕍𝕌 u₁) A v (s ⹁ 𝕍𝕌 u₁ ∶ w) (h w)
   ≔→sub-gen Γ Δ {m} {u} (∃· u₁ A) v s (t , h) =
     t , ≔→sub-gen Γ (Δ ، 𝕍𝕌 u₁) A v (s ⹁ 𝕍𝕌 u₁ ∶ t) h
-  ≔→sub-gen Γ Δ {m} {u} (x ∈ₐ x₁) v s (lift h) =
-    lift (subst₂ (λ a b → b ∈ a) (sym (≔→sub-agents m s v x₁)) (sym (≔→sub-agent m s v x)) h)
-  ≔→sub-gen Γ Δ {m} {u} (∣ A ∣ₛ＝ n) v s (lift h) =
-    lift (trans (cong length (≔→sub-agents m s v A)) h)
+  ≔→sub-gen Γ Δ {m} {u} (𝔸 A) v s (lift h) =
+    lift (≔→sub-SetAtom-gen Γ Δ A v s h)
 --  ≔→sub-gen Γ Δ {m} {u} (x ∈ᵢ x₁) v s (lift h) =
 --    lift (subst (λ a → x₁ a) (sym (≔→sub-data m s v x)) h)
 --  ≔→sub-gen Γ Δ {m} {u} (⟨ x ، x₁ ⟩∈ᵣ x₂) v s (lift h) =
@@ -1211,10 +1250,8 @@ mutual
     ≔→sub-gen-rev Γ (Δ ، 𝕍𝕌 u₁) A v (s ⹁ 𝕍𝕌 u₁ ∶ w) (h w)
   ≔→sub-gen-rev Γ Δ {m} {u} (∃· u₁ A) v s (t , h) =
     t , ≔→sub-gen-rev Γ (Δ ، 𝕍𝕌 u₁) A v (s ⹁ 𝕍𝕌 u₁ ∶ t) h
-  ≔→sub-gen-rev Γ Δ {m} {u} (x ∈ₐ x₁) v s (lift h) =
-    lift (subst₂ (λ a b → b ∈ a) (≔→sub-agents m s v x₁) (≔→sub-agent m s v x) h)
-  ≔→sub-gen-rev Γ Δ {m} {u} (∣ A ∣ₛ＝ n) v s (lift h) =
-    lift (trans (cong length (sym (≔→sub-agents m s v A))) h)
+  ≔→sub-gen-rev Γ Δ {m} {u} (𝔸 A) v s (lift h) =
+    lift (≔→sub-SetAtom-gen-rev Γ Δ A v s h)
 --  ≔→sub-gen-rev Γ Δ {m} {u} (x ∈ᵢ x₁) v s (lift h) =
 --    lift (subst (λ a → x₁ a) (≔→sub-data m s v x) h)
 --  ≔→sub-gen-rev Γ Δ {m} {u} (⟨ x ، x₁ ⟩∈ᵣ x₂) v s (lift h) =

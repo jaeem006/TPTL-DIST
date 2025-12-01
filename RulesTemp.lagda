@@ -61,8 +61,8 @@ abstract
 
 rule-size-change-resources : (Γ : ℂ₀) (t₁ t₂ : ℂRes Γ) (A : ℂAgents Γ) (n : ℕ) → Rule
 rule-size-change-resources Γ t₁ t₂ A n =
-  rule (rseq Γ t₂ (∣ A ∣ₛ＝ n) ∷ [])
-       (rseq Γ t₁ (∣ A ∣ₛ＝ n))
+  rule (rseq Γ t₂ (𝔸 (∣ A ∣ₛ＝ n)) ∷ [])
+       (rseq Γ t₁ (𝔸 (∣ A ∣ₛ＝ n)))
 
 abstract
   rule-size-change-resources-sat : (M : Model₀) (Γ : ℂ₀) (t₁ t₂ : ℂRes Γ) (A : ℂAgents Γ) (n : ℕ)
