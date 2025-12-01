@@ -121,6 +121,13 @@ open import RulesTemp(𝔻)(W)          -- timed/temporal rules
 open import RulesClassical(𝔻)(W)(EM) -- rules that require classical reasoning
 open import RulesInd(𝔻)(W)           -- induction rule
 
+Section3-4-Annotations : (Γ : Ctxt) → Set
+Section3-4-Annotations = Interval
+
+
+Section3-4-Hypothesis-Semantics : {Γ : Ctxt} (f : Form Γ) (a : CE Γ) (M : Model Γ) → Set₁
+Section3-4-Hypothesis-Semantics = sat-ctxt-annot
+
 \end{code}
 
 The following file includes simple examples of formulas that can be derived using the above rules:
