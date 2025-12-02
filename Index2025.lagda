@@ -229,14 +229,14 @@ Section3-5-Classical-Rule = LEM
 
 Section3-5-Derived-Rules :
     ((Γ : ℂ₀) (T : ℂRes Γ) (A : ℂForm Γ) → Rule)
-  × (?)
+  × ({!!})
   × ((Γ : ℂ₀) (r R : ℂRes Γ) (A : ℂForm Γ) → Rule)
   × ((Γ : ℂ₀) (t r r₁ : ℂRes Γ) (A : ℂForm Γ) → Rule)
   × ((Γ : ℂ₀) (r R : ℂRes Γ) (A C : ℂForm Γ) → Rule)
   × ((Γ : ℂ₀) (t r T : ℂRes Γ) (A C : ℂForm Γ) → Rule)
 Section3-5-Derived-Rules =
     rule□R
-  , ?
+  , {!!}
   , ◆·R
   , rule◇↓R
   , ◆·L
@@ -256,8 +256,28 @@ The following file contains the proof of a key property of the Pistis broadcast 
 
 \begin{code}
 
+open import Data.Nat
+open import Data.Nat.Properties
+
 open import Pistis(𝔻)(W)(EM)
 
+Section4-1-Pushing : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form Γ
+Section4-1-Pushing = pushing
+
+Section4-1-Pulling : {!!}
+Section4-1-Pulling = {!!}
+
+Section4-1-Figure-6 :
+    ({Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form Γ)
+  × ({Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form Γ)
+  × ({Γ : Ctxt} → Form Γ)
+Section4-1-Figure-6 =
+    boundedPushing
+  , pushing
+  , correctBefore
+
+Section4-2-Lemma-2 : (Γ : ℂ₀) (r Δ : ℂRes Γ) (q : ℕ) (del : ℂData Γ) → Rule
+Section4-2-Lemma-2 = pistis1
 \end{code}
 
 The following file contains a slightly more convenient definition of TPTL-dist's semantics
