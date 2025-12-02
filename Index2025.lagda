@@ -196,13 +196,51 @@ Section-3-5-Propositional-Logic-Rules =
 Section3-5-Temporal-Rules :
     ((Γ : ℂ₀) (r r₁ : ℂRes Γ) (A : ℂForm Γ) → Rule)
   × ((Γ : ℂ₀) (r r₁ : ℂRes Γ) (A B : ℂForm Γ) → Rule)
-  × ({!((Γ : ℂ₀) (r r₁ : ℂRes Γ) (A B : ℂForm Γ) → Rule)!})
+  × (((Γ : ℂ₀) (r r₁ : ℂRes Γ) (A B : ℂForm Γ) → Rule))
   × ((Γ : ℂ₀) (T r : ℂRes Γ) (A B C : ℂForm Γ) → Rule)
 Section3-5-Temporal-Rules =
     ruleＯR
   , ruleＵR
   , {! ruleＯL!}
   , ruleＵL
+
+Section3-5-Timed-Rules :
+    ((Γ : ℂ₀) (r : ℂRes Γ) (T : ℂCE Γ) (A : Form (ℂtxt Γ ، 𝕍ℝ)) (C : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (r : ℂRes Γ) (A : ℂForm (ℂv Γ 𝕍ℝ)) → Rule)
+  × ((Γ : ℂ₀) (r₁ r₂ : ℂRes Γ) (R : ℂCE Γ) → Rule)
+Section3-5-Timed-Rules =
+    ruleＦL
+  , ruleＦR
+  , rule＝-⋆-sym
+
+Section3-5-Inteval-Rules :
+    ((Γ : ℂ₀) (r r′ : ℂRes Γ) (i : ℂInterval Γ) (A B : ℂForm Γ) → Rule)
+  × {!!}
+Section3-5-Inteval-Rules =
+    ruleIn
+  , {!!}
+
+
+Section3-5-Induction-Rule : (Γ : ℂ₀) (A : Form (ℂtxt Γ ، 𝕍ℝ)) → Rule
+Section3-5-Induction-Rule = rule-induction
+
+Section3-5-Classical-Rule : {Γ : Ctxt} (A : Form Γ) → Form Γ
+Section3-5-Classical-Rule = LEM
+
+Section3-5-Derived-Rules :
+    ((Γ : ℂ₀) (T : ℂRes Γ) (A : ℂForm Γ) → Rule)
+  × (?)
+  × ((Γ : ℂ₀) (r R : ℂRes Γ) (A : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (t r r₁ : ℂRes Γ) (A : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (r R : ℂRes Γ) (A C : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (t r T : ℂRes Γ) (A C : ℂForm Γ) → Rule)
+Section3-5-Derived-Rules =
+    rule□R
+  , ?
+  , ◆·R
+  , rule◇↓R
+  , ◆·L
+  , rule◇↓L
 \end{code}
 
 The following file includes simple examples of formulas that can be derived using the above rules:
