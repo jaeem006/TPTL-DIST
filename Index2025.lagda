@@ -35,6 +35,7 @@ The syntax of TPTL-dist is defined here:
 \begin{code}
 
 open import Syntax(𝔻)(W)
+open import Subst(𝔻)(W)
 
 Section3-1-Type : Set
 Section3-1-Type = 𝕌
@@ -63,13 +64,26 @@ Section3-1-SetAtom = Form
 Section3-1-Formula : (Γ : Ctxt) → Set₁
 Section3-1-Formula = Form
 
+Section3-1-Temporal-Operators :
+     ({Γ : Ctxt} → Form Γ → Form Γ)
+   × ({Γ : Ctxt} → Form Γ → Form Γ)
+   × ({Γ : Ctxt} → Form Γ → Form Γ)
+   × ({Γ : Ctxt} → Form Γ → Form Γ)
+Section3-1-Temporal-Operators =
+   ◇ , ◆ , □ , ■
+
+Section3-1-Bounded-Temporal-Operators :
+     ({Γ : Ctxt} → Res Γ → Form Γ → Form Γ)
+   × ({Γ : Ctxt} → Res Γ → Form Γ → Form Γ)
+   × ({Γ : Ctxt} → Form Γ → Form Γ)
+Section3-1-Bounded-Temporal-Operators =
+   ◇↓ , □↓ , {!◆·!}
 \end{code}
 
 The semantics of TPTL-dist is defined here:
 
 \begin{code}
 
-open import Subst(𝔻)(W)
 open import Semantics(𝔻)(W)
 
 open World.World W
@@ -144,7 +158,6 @@ open import RulesInd(𝔻)(W)           -- induction rule
 
 Section3-4-Annotations : (Γ : Ctxt) → Set
 Section3-4-Annotations = Interval
-
 
 Section3-4-Hypothesis-Semantics : {Γ : Ctxt} (f : Form Γ) (a : CE Γ) (M : Model Γ) → Set₁
 Section3-4-Hypothesis-Semantics = sat-ctxt-annot
