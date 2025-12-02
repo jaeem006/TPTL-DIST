@@ -77,7 +77,7 @@ Section3-1-Bounded-Temporal-Operators :
    × ({Γ : Ctxt} → Res Γ → Form Γ → Form Γ)
    × ({Γ : Ctxt} → Form Γ → Form Γ)
 Section3-1-Bounded-Temporal-Operators =
-   ◇↓ , □↓ , {!◆·!}
+   ◇↓ , □↓ , ◆·
 \end{code}
 
 The semantics of TPTL-dist is defined here:
@@ -155,6 +155,7 @@ open import RulesPred(𝔻)(W)          -- predicate logic
 open import RulesTemp(𝔻)(W)          -- timed/temporal rules
 open import RulesClassical(𝔻)(W)(EM) -- rules that require classical reasoning
 open import RulesInd(𝔻)(W)           -- induction rule
+open import RulesMisc(𝔻)(W)          -- other rule
 
 Section3-4-Annotations : (Γ : Ctxt) → Set
 Section3-4-Annotations = Interval
@@ -162,6 +163,46 @@ Section3-4-Annotations = Interval
 Section3-4-Hypothesis-Semantics : {Γ : Ctxt} (f : Form Γ) (a : CE Γ) (M : Model Γ) → Set₁
 Section3-4-Hypothesis-Semantics = sat-ctxt-annot
 
+Section3-4-Semantics :
+    ({Γ : Ctxt} (c : ℂ Γ) (M : ℂModel c) → Set₁)
+  × ((M : Model₀) (s : Sequent) → Set₁)
+  × ((M : Model₀) (r : Rule) → Set₂)
+Section3-4-Semantics  =
+    sat-ctxt
+  , sat-sequent
+  , sat-rule
+
+Section-3-5-Propositional-Logic-Rules :
+    ((Γ : ℂ₀) (r : ℂRes Γ) (A : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (r : ℂCE Γ) (A B : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (r : ℂCE Γ) (x : ℂCE Γ) (A B C : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (r : ℂCE Γ) (A B : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (r : ℂCE Γ) (A B : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (r : ℂRes Γ) (R : ℂCE Γ) (A B C : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (r : ℂRes Γ) (A B : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (T : ℂCE Γ) (R : ℂRes Γ) (A B C : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (r : ℂCE Γ) (A : ℂForm Γ) → Rule)
+Section-3-5-Propositional-Logic-Rules =
+    rule¬I
+  , rule∧I
+  , rule∧E
+  , rule∨Iₗ
+  , rule∨Iᵣ
+  , rule∨E
+  , rule→I
+  , rule→L
+  , ruleLbl
+
+Section3-5-Temporal-Rules :
+    ((Γ : ℂ₀) (r r₁ : ℂRes Γ) (A : ℂForm Γ) → Rule)
+  × ((Γ : ℂ₀) (r r₁ : ℂRes Γ) (A B : ℂForm Γ) → Rule)
+  × ({!((Γ : ℂ₀) (r r₁ : ℂRes Γ) (A B : ℂForm Γ) → Rule)!})
+  × ((Γ : ℂ₀) (T r : ℂRes Γ) (A B C : ℂForm Γ) → Rule)
+Section3-5-Temporal-Rules =
+    ruleＯR
+  , ruleＵR
+  , {! ruleＯL!}
+  , ruleＵL
 \end{code}
 
 The following file includes simple examples of formulas that can be derived using the above rules:
