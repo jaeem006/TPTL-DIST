@@ -155,7 +155,8 @@ open import RulesPred(𝔻)(W)          -- predicate logic
 open import RulesTemp(𝔻)(W)          -- timed/temporal rules
 open import RulesClassical(𝔻)(W)(EM) -- rules that require classical reasoning
 open import RulesInd(𝔻)(W)           -- induction rule
-open import RulesMisc(𝔻)(W)          -- other rule
+open import RulesMisc(𝔻)(W)          -- other rules
+open import RulesNonEmpty(𝔻)(W)      -- otherNon empty rules
 
 Section3-4-Annotations : (Γ : Ctxt) → Set
 Section3-4-Annotations = Interval
@@ -193,15 +194,28 @@ Section-3-5-Propositional-Logic-Rules =
   , rule→L
   , ruleLbl
 
+Section3-5-Non-Empty-Rules :
+    ((Γ : ℂ₀) (r₁ r₂ : ℂRes Γ) → Rule)
+  × ((Γ : ℂ₀) (r₁ r₂ : ℂRes Γ) → Rule) 
+  × ((Γ : ℂ₀) (r₁ r₂ : ℂRes Γ) → Rule)
+  × ((Γ : ℂ₀) (r₁ r₂ r : ℂRes Γ) → Rule)
+  × ((Γ : ℂ₀) (r : ℂRes Γ) → Rule)
+  × ((Γ : ℂ₀) → Rule)
+Section3-5-Non-Empty-Rules =
+    nonEmptyI₁
+  , nonEmptyI₂
+  , nonEmptyI₃
+  , nonEmptyI₄
+  , nonEmptyRes
+  , nonEmptyU
+
 Section3-5-Temporal-Rules :
     ((Γ : ℂ₀) (r r₁ : ℂRes Γ) (A : ℂForm Γ) → Rule)
   × ((Γ : ℂ₀) (r r₁ : ℂRes Γ) (A B : ℂForm Γ) → Rule)
-  × (((Γ : ℂ₀) (r r₁ : ℂRes Γ) (A B : ℂForm Γ) → Rule))
   × ((Γ : ℂ₀) (T r : ℂRes Γ) (A B C : ℂForm Γ) → Rule)
 Section3-5-Temporal-Rules =
     ruleＯR
   , ruleＵR
-  , {! ruleＯL!}
   , ruleＵL
 
 Section3-5-Timed-Rules :
@@ -213,13 +227,8 @@ Section3-5-Timed-Rules =
   , ruleＦR
   , rule＝-⋆-sym
 
-Section3-5-Inteval-Rules :
-    ((Γ : ℂ₀) (r r′ : ℂRes Γ) (i : ℂInterval Γ) (A B : ℂForm Γ) → Rule)
-  × {!!}
-Section3-5-Inteval-Rules =
-    ruleIn
-  , {!!}
-
+Section3-5-Inteval-Rules : ((Γ : ℂ₀) (r r′ : ℂRes Γ) (i : ℂInterval Γ) (A B : ℂForm Γ) → Rule)
+Section3-5-Inteval-Rules = ruleIn
 
 Section3-5-Induction-Rule : (Γ : ℂ₀) (A : Form (ℂtxt Γ ، 𝕍ℝ)) → Rule
 Section3-5-Induction-Rule = rule-induction
@@ -229,14 +238,12 @@ Section3-5-Classical-Rule = LEM
 
 Section3-5-Derived-Rules :
     ((Γ : ℂ₀) (T : ℂRes Γ) (A : ℂForm Γ) → Rule)
-  × ({!!})
   × ((Γ : ℂ₀) (r R : ℂRes Γ) (A : ℂForm Γ) → Rule)
   × ((Γ : ℂ₀) (t r r₁ : ℂRes Γ) (A : ℂForm Γ) → Rule)
   × ((Γ : ℂ₀) (r R : ℂRes Γ) (A C : ℂForm Γ) → Rule)
   × ((Γ : ℂ₀) (t r T : ℂRes Γ) (A C : ℂForm Γ) → Rule)
 Section3-5-Derived-Rules =
     rule□R
-  , {!!}
   , ◆·R
   , rule◇↓R
   , ◆·L
