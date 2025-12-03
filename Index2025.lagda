@@ -271,9 +271,6 @@ open import Pistis(𝔻)(W)(EM)
 Section4-1-Pushing : {Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form Γ
 Section4-1-Pushing = pushing
 
-Section4-1-Pulling : {!!}
-Section4-1-Pulling = {!!}
-
 Section4-1-Figure-6 :
     ({Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form Γ)
   × ({Γ : Ctxt} (q : ℕ) (del : Data Γ) (Δ : Res Γ) → Form Γ)

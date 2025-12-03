@@ -63,9 +63,9 @@ data DecForm : {Γ : Ctxt} (f : Form Γ) → Set₁ where
   Dec∧ : {Γ : Ctxt} (f g : Form Γ) → DecForm f → DecForm g → DecForm (f ∧· g)
   Dec∨ : {Γ : Ctxt} (f g : Form Γ) → DecForm f → DecForm g → DecForm (f ∨· g)
   Dec→ : {Γ : Ctxt} (f g : Form Γ) → DecForm f → DecForm g → DecForm (f →· g)
-  Dec¬ : {Γ : Ctxt} (f : Form Γ) → DecForm f → DecForm (¬· f)
-  Dec∈ : {Γ : Ctxt} (a : Agent Γ) (A : Agents Γ) → DecForm (a ∈ₐ A)
-  Dec∣ : {Γ : Ctxt} (A : Agents Γ) (n : ℕ) → DecForm (∣ A ∣ₛ＝ n)
+--  Dec¬ : {Γ : Ctxt} (f : Form Γ) → DecForm f → DecForm (¬· f)
+--  Dec∈ : {Γ : Ctxt} (a : Agent Γ) (A : Agents Γ) → DecForm (a ∈ₐ A)
+--  Dec∣ : {Γ : Ctxt} (A : Agents Γ) (n : ℕ) → DecForm (∣ A ∣ₛ＝ n)
   DecＯ : {Γ : Ctxt} (f : Form Γ) → DecForm f → DecForm (Ｏ f)
 -- add atoms, Ｓ, Ｙ, Ｂ, Ｆ, _⟨_⟩_
 
@@ -106,11 +106,12 @@ isDecidable WP {Γ} m f (Dec→ g h dg dh) | inj₁ p with isDecidable WP m h dh
 ... | inj₁ q = inj₁ (λ _ → q)
 ... | inj₂ q = inj₂ (λ r → q (r p))
 isDecidable WP {Γ} m f (Dec→ g h dg dh) | inj₂ p = inj₁ (λ q → ⊥-elim (p q))
--- ¬
+{---- ¬
 isDecidable WP {Γ} m f (Dec¬ g dg) with isDecidable WP m g dg
 isDecidable WP {Γ} m f (Dec¬ g dg) | inj₁ p = inj₂ (λ q → q p)
 isDecidable WP {Γ} m f (Dec¬ g dg) | inj₂ p = inj₁ p
--- ∈
+--}
+{---- ∈
 isDecidable WP {Γ} m f (Dec∈ a A) with dec∈ (⟦ a ⟧ᵢ· m) (⟦ A ⟧ₛ· m) decℕ
 ... | inj₁ p = inj₁ (lift p)
 ... | inj₂ p = inj₂ (λ z → p (lower z))
@@ -118,6 +119,7 @@ isDecidable WP {Γ} m f (Dec∈ a A) with dec∈ (⟦ a ⟧ᵢ· m) (⟦ A ⟧�
 isDecidable WP {Γ} m f (Dec∣ A n) with decℕ (length (⟦ A ⟧ₛ· m)) n
 ... | inj₁ q = inj₁ (lift q)
 ... | inj₂ q = inj₂ (λ z → q (lower z))
+--}
 -- Ｏ
 isDecidable WP {Γ} m f (DecＯ g dg) with isDecidable WP (m ≔ₜ (𝕎props.𝕊 WP (Model.w m))) g dg
 ... | inj₁ q = inj₁ (𝕎props.𝕊 WP (Model.w m) , 𝕎props.𝕊◃ WP (Model.w m) , q)
@@ -125,6 +127,7 @@ isDecidable WP {Γ} m f (DecＯ g dg) with isDecidable WP (m ≔ₜ (𝕎props.�
                                              (𝕎props.◃injᵣ WP r (𝕎props.𝕊◃ WP (Model.w m)))
                                              s)
 
+{--
 example0′ : (M : Model₀)
             (A : Form₀)
           → sat-rule M (rule [] (seq ℂ⟨⟩ (CEr 𝟎) (⊤· →· ⊤·)))
@@ -143,7 +146,7 @@ example1 : (M : Model₀)
            (A : Form₀)
          → sat-rule M (rule [] (seq ℂ⟨⟩ (CEr 𝟎) (A →· A)))
 example1 M A p s h = {!--something--!}
-
+--}
 
 
 \end{code}
