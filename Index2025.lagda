@@ -58,8 +58,8 @@ Section3-1-Comparison = Comparison
 Section3-1-DistAtom : (Γ : Ctxt) → Set₁
 Section3-1-DistAtom = Atom
 
-Section3-1-SetAtom : (Γ : Ctxt) → Set₁
-Section3-1-SetAtom = Form
+Section3-1-SetAtom : (Γ : Ctxt) → Set
+Section3-1-SetAtom = SetAtom
 
 Section3-1-Formula : (Γ : Ctxt) → Set₁
 Section3-1-Formula = Form
