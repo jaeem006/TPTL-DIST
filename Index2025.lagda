@@ -248,6 +248,12 @@ Section3-5-Derived-Rules =
   , rule◇↓R
   , ◆·L
   , rule◇↓L
+
+Section3-6-Lemma1 :
+    (M : Model₀)
+    {Γ : ℂ₀} (a b c : ℂAgent Γ) (Δ r : ℂRes Γ) (p : ℂData Γ)
+  → sat-rule M (example1 Γ a b c Δ r p)
+Section3-6-Lemma1 = example1-true
 \end{code}
 
 The following file includes simple examples of formulas that can be derived using the above rules:
