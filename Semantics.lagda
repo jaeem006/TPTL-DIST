@@ -51,12 +51,8 @@ correctAgent : FaultModel → agent → Set
 correctAgent fm a = ¬ faultyAgent fm a
 
 -- It's a set of atomic propositions
-LocalState : Set₁
-LocalState = List atom
-
 GlobalState : Set₁
-GlobalState = agent → LocalState
--- List (Agent × AtomProp)
+GlobalState = List atom
 
 Run : Set₁
 Run = 𝕎 → GlobalState
@@ -66,7 +62,7 @@ Runs = Run → Set
 
 -- interpretation of the atoms
 Interp : Set₂
-Interp = {--Agent →--} LocalState → atom → Set₁
+Interp = {--Agent →--} GlobalState → atom → Set₁
 -- λ s p → p ∈ s
 
 record Model (Γ : Ctxt) : Set₂ where
@@ -224,7 +220,7 @@ m ⊨A (∣ A ∣ₛ＝ n) = length (⟦ A ⟧ₛ· m) ≡ n
 
 _⊨_ : {Γ : Ctxt} → Model Γ → Form Γ → Set₁
 -- Propositional
-m ⊨ 𝕒 p = (a : agent) → Model.interp m {--a--} (Model.run m (Model.w m) a) (⟦ p ⟧ₐ· m)
+m ⊨ 𝕒 p = Model.interp m (Model.run m (Model.w m)) (⟦ p ⟧ₐ· m)
 m ⊨ ⊤· = Lift _ ⊤
 m ⊨ ⊥· = Lift _ ⊥
 m ⊨ (f ∧· f₁) = (m ⊨ f) × (m ⊨ f₁)
@@ -592,10 +588,10 @@ mutual
         → Sub⊆ e (Model.subΓ M) s
         → (M ≔ₛ s) ⊨ (↑ e F)
         → M ⊨ F
-  ⊨-↑⊆→ {Γ} {Δ} {m} {𝕒 x} s e ⊆s h a =
-    subst (Model.interp m (Model.run m (Model.w m) a))
+  ⊨-↑⊆→ {Γ} {Δ} {m} {𝕒 x} s e ⊆s h =
+    subst (Model.interp m (Model.run m (Model.w m)))
           (⟦⊆⟧ₐ (Model.subΓ m) e s ⊆s x)
-          (h a)
+          h
   ⊨-↑⊆→ {Γ} {Δ} {m} {⊤·} s e ⊆s h = h
   ⊨-↑⊆→ {Γ} {Δ} {m} {⊥·} s e ⊆s h = h
   ⊨-↑⊆→ {Γ} {Δ} {m} {F ∧· F₁} s e ⊆s (h , q) =
@@ -655,10 +651,10 @@ mutual
         → Sub⊆ e (Model.subΓ M) s
         → M ⊨ F
         → (M ≔ₛ s) ⊨ (↑ e F)
-  →⊨-↑⊆ {Γ} {Δ} {m} {𝕒 x} s e ⊆s h a =
-    subst (Model.interp m (Model.run m (Model.w m) a))
+  →⊨-↑⊆ {Γ} {Δ} {m} {𝕒 x} s e ⊆s h =
+    subst (Model.interp m (Model.run m (Model.w m)))
           (sym (⟦⊆⟧ₐ (Model.subΓ m) e s ⊆s x))
-          (h a)
+          h
   →⊨-↑⊆ {Γ} {Δ} {m} {⊤·} s e ⊆s h = h
   →⊨-↑⊆ {Γ} {Δ} {m} {⊥·} s e ⊆s h = h
   →⊨-↑⊆ {Γ} {Δ} {m} {F ∧· F₁} s e ⊆s (h , q) =
@@ -1102,18 +1098,18 @@ mutual
               (s : Sub Δ)
             → ((m ≔ ⟦ u ، v ⟧c· m) ≔= s) ⊨ A
             → (m ≔= s) ⊨ sub A (CSub،＋ v)
-  ≔→sub-gen Γ Δ {m} {u} (𝕒 x) v s h a =
-    subst₃ (λ x₁ x₂ x₃ → x₁ (x₂ x₃ a) (⟦ sub-Atom x (CSub،＋ v) ⟧ₐ· (m ≔= s)))
+  ≔→sub-gen Γ Δ {m} {u} (𝕒 x) v s h =
+    subst₃ (λ x₁ x₂ x₃ → x₁ (x₂ x₃) (⟦ sub-Atom x (CSub،＋ v) ⟧ₐ· (m ≔= s)))
            (sym (interp-≔= m s))
            (sym (run-≔= m s))
            (sym (w-≔= m s))
-           (subst (Model.interp m (Model.run m (Model.w m) a))
+           (subst (Model.interp m (Model.run m (Model.w m)))
                   (sym (≔→sub-atom m s v x))
-                  (subst₃ (λ x₁ x₂ x₃ → x₁ (x₂ x₃ a) (⟦ x ⟧ₐ· ((m ≔ ⟦ u ، v ⟧c· m) ≔= s)))
+                  (subst₃ (λ x₁ x₂ x₃ → x₁ (x₂ x₃) (⟦ x ⟧ₐ· ((m ≔ ⟦ u ، v ⟧c· m) ≔= s)))
                           (interp-≔= (m ≔ ⟦ u ، v ⟧c· m) s)
                           (run-≔= (m ≔ ⟦ u ، v ⟧c· m) s)
                           (w-≔= (m ≔ ⟦ u ، v ⟧c· m) s)
-                          (h a)))
+                          h))
   -- use ≔→sub-atom
   ≔→sub-gen Γ Δ {m} {u} ⊤· v s h = h
   ≔→sub-gen Γ Δ {m} {u} (A ∧· A₁) v s (h₁ , h₂) =
@@ -1222,18 +1218,18 @@ mutual
                   (s : Sub Δ)
                 → (m ≔= s) ⊨ sub A (CSub،＋ v)
                 → ((m ≔ ⟦ u ، v ⟧c· m) ≔= s) ⊨ A
-  ≔→sub-gen-rev Γ Δ {m} {u} (𝕒 x) v s h a =
-    subst₃ (λ x₁ x₂ x₃ → x₁ (x₂ x₃ a) (⟦ x ⟧ₐ· ((m ≔ ⟦ u ، v ⟧c· m) ≔= s)))
+  ≔→sub-gen-rev Γ Δ {m} {u} (𝕒 x) v s h =
+    subst₃ (λ x₁ x₂ x₃ → x₁ (x₂ x₃) (⟦ x ⟧ₐ· ((m ≔ ⟦ u ، v ⟧c· m) ≔= s)))
            (sym (interp-≔= (m ≔ ⟦ u ، v ⟧c· m) s))
            (sym (run-≔= (m ≔ ⟦ u ، v ⟧c· m) s))
            (sym (w-≔= (m ≔ ⟦ u ، v ⟧c· m) s))
-           (subst (Model.interp m (Model.run m (Model.w m) a))
+           (subst (Model.interp m (Model.run m (Model.w m)))
                   (≔→sub-atom m s v x)
-                  (subst₃ (λ x₁ x₂ x₃ → x₁ (x₂ x₃ a) (⟦ sub-Atom x (CSub،＋ v) ⟧ₐ· (m ≔= s)))
+                  (subst₃ (λ x₁ x₂ x₃ → x₁ (x₂ x₃) (⟦ sub-Atom x (CSub،＋ v) ⟧ₐ· (m ≔= s)))
                           (interp-≔= m s)
                           (run-≔= m s)
                           (w-≔= m s)
-                          (h a)))
+                          h))
   ≔→sub-gen-rev Γ Δ {m} {u} ⊤· v s h = h
   ≔→sub-gen-rev Γ Δ {m} {u} (A ∧· A₁) v s (h₁ , h₂) =
     ≔→sub-gen-rev Γ Δ A v s h₁ ,
