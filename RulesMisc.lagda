@@ -1,7 +1,9 @@
 Predicate logic rules
 
 \begin{code}
+
 {-# OPTIONS --with-K #-}
+{-# OPTIONS --safe #-}
 
 open import Level using (Level ; 0ℓ ; Lift ; lift ; lower) renaming (suc to lsuc)
 
@@ -267,6 +269,18 @@ abstract
     𝕀 : ((M ≔ₛ (s ⹁ v ∶ u)) ≔ₜ (⟦ ↑ᵣ₀ r ⟧ᵣ (s ⹁ v ∶ u))) ⊨ ↑₀ A
     𝕀 = →⊨-↑₀ {ℂtxt Γ} {(M ≔ₛ s) ≔ₜ (⟦ ↑ᵣ₀ r ⟧ᵣ (s ⹁ v ∶ u))} {A} {v} u
               (subst (λ x → ((M ≔ₛ s) ≔ₜ x) ⊨ A) (sym (⟦↑ᵣ₀⟧ᵣ r s v u)) (satA s satΓ))
+
+rule-thin-gen-v : (Γ : ℂ₀) (v : 𝕍) (r : ℂCE Γ) (A : ℂForm Γ) → Rule
+rule-thin-gen-v Γ v r A =
+  rule [ seq Γ r A ]
+       (seq (ℂv Γ v) (↑CE₀ r) (↑₀ A))
+
+abstract
+  rule-thin-gen-v-sat : (M : Model₀) (Γ : ℂ₀) (v : 𝕍) (r : ℂCE Γ) (A : ℂForm Γ)
+                      → sat-rule M (rule-thin-gen-v Γ v r A)
+  rule-thin-gen-v-sat M Γ v r A (satA , _) (s ⹁ .v ∶ u) satΓ =
+    →sat-ctxt-annot-↑₀ {ℂtxt Γ} {v} (M ≔ₛ (s ⹁ v ∶ u)) A r
+      (satA (Sub،→ (Model.subΓ (M ≔ₛ (s ⹁ v ∶ u)))) satΓ)
 
 --     Γ ⊢[r] B   Γ, B^r ⊢[R] A
 -- --------------------------

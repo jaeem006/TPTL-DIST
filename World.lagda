@@ -1,4 +1,5 @@
 \begin{code}
+
 {-# OPTIONS --without-K --safe #-}
 
 open import Level using (Level ; 0ℓ) renaming (suc to lsuc)

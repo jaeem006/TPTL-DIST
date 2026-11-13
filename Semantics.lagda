@@ -1,5 +1,7 @@
 \begin{code}
 
+{-# OPTIONS --safe #-}
+
 open import Level using (Level ; 0ℓ ; Lift ; lift ; lower) renaming (suc to lsuc)
 
 open import Agda.Builtin.Equality
@@ -15,6 +17,7 @@ open import Data.Sum
 open import Data.Unit using (⊤ ; tt)
 open import Data.Empty
 open import Data.Maybe
+open import Function using (_∘_ ; id)
 
 open import Relation.Nullary
 open import Relation.Binary.PropositionalEquality using (sym ; trans ; subst)
@@ -65,6 +68,10 @@ Interp : Set₂
 Interp = {--Agent →--} GlobalState → atom → Set₁
 -- λ s p → p ∈ s
 
+SemVar : Ctxt → Set₂
+SemVar Γ = FormVar → (Δ : Ctxt) → Γ ⊆ Δ → Set₁
+-- FormVar → Set₁
+
 record Model (Γ : Ctxt) : Set₂ where
   constructor model
   field
@@ -74,6 +81,24 @@ record Model (Γ : Ctxt) : Set₂ where
     run    : Run
     w      : 𝕎
     subΓ   : Sub Γ
+--    vars   : SemVar Γ
+--    vars   : FormVar → Set₁
+
+SemVar،→ : (Γ : Ctxt) (u : 𝕍)
+        → SemVar (Γ ، u)
+        → SemVar Γ
+SemVar،→ Γ u s n Δ e = s n (Δ ، u) (⊆، u e)
+
+→SemVar، : (Γ : Ctxt) (u : 𝕍)
+        → SemVar Γ
+        → SemVar (Γ ، u)
+→SemVar، Γ u s n Δ e = s n Δ (⊆-trans ⊆₀ e)
+
+→SemVar⊆ : {Γ Δ : Ctxt}
+         → Γ ⊆ Δ
+         → SemVar Γ
+         → SemVar Δ
+→SemVar⊆ {Γ} {Δ} e s n Φ f = s n Φ (⊆-trans e f)
 
 Model،→ : {Γ : Ctxt} {u : 𝕍} → Model (Γ ، u) → Model Γ
 Model،→ {Γ} {u} m@(model interp run w sub) =
@@ -91,11 +116,11 @@ Model،→ {Γ} {u} m@(model interp run w sub) =
 
 -- Updates a model with a new run
 _≔ᵣ_ : {Γ : Ctxt} → Model Γ → Run → Model Γ
-model interp run w rvars ≔ᵣ r = model interp r w rvars
+model interp run w sub ≔ᵣ r = model interp r w sub
 
 -- Updates a model with a new time
 _≔ₜ_ : {Γ : Ctxt} → Model Γ → 𝕎 → Model Γ
-model interp run w rvars ≔ₜ t = model interp run t rvars
+model interp run w sub ≔ₜ t = model interp run t sub
 
 -- Updates a model with a new set of agent
 _≔_ : {Γ : Ctxt} → Model Γ → {u : 𝕍} → ⟦𝕍⟧ u → Model (Γ ، u)
@@ -109,6 +134,8 @@ _≔r_ : {Γ : Ctxt} → Model Γ → ⟦ℝ⟧ → Model (Γ ، 𝕍ℝ)
 _≔r_ {Γ} (model interp run w sub) v = model interp run w (sub ⹁ 𝕍ℝ ∶ v)
 
 -- Updates a model with a new set of agent
+--_≔ₛ⟨_⟩_ : {Γ Δ : Ctxt} → Model Γ → Γ ⊆ Δ → Sub Δ → Model Δ
+--_≔ₛ⟨_⟩_ {Γ} (model interp run w sub vars) e s = model interp run w s (→SemVar⊆ e vars)
 _≔ₛ_ : {Γ Δ : Ctxt} → Model Γ → Sub Δ → Model Δ
 _≔ₛ_ {Γ} (model interp run w sub) s = model interp run w s
 
@@ -121,10 +148,11 @@ _≔ₛ_ {Γ} (model interp run w sub) s = model interp run w s
 ≔ₛ-≔ₜ {Γ} {Δ} (model interp r w₁ sub) s w = refl
 
 ⟦_⟧ᵣ_ : {Γ : Ctxt} → Res Γ → Sub Γ → 𝕎
-⟦ var x ⟧ᵣ i  = app-sub x i
+⟦ 𝐯 x ⟧ᵣ i  = app-sub x i
 ⟦ 𝟎 ⟧ᵣ i      = 𝟘
 --⟦ 𝐬 t ⟧ᵣ i    = 𝕤 (⟦ t ⟧ᵣ i)
 ⟦ t ⋆ t₁ ⟧ᵣ i = (⟦ t ⟧ᵣ i) · (⟦ t₁ ⟧ᵣ i)
+⟦ rvar ρ ⟧ᵣ i  = 𝟘
 
 ⟦_⟧ᵣ·_ : {Γ : Ctxt} → Res Γ → Model Γ → 𝕎
 ⟦ a ⟧ᵣ· m = ⟦ a ⟧ᵣ (Model.subΓ m)
@@ -221,6 +249,7 @@ m ⊨A (∣ A ∣ₛ＝ n) = length (⟦ A ⟧ₛ· m) ≡ n
 _⊨_ : {Γ : Ctxt} → Model Γ → Form Γ → Set₁
 -- Propositional
 m ⊨ 𝕒 p = Model.interp m (Model.run m (Model.w m)) (⟦ p ⟧ₐ· m)
+m ⊨ var x = Lift _ ⊥ --Model.vars m x
 m ⊨ ⊤· = Lift _ ⊤
 m ⊨ ⊥· = Lift _ ⊥
 m ⊨ (f ∧· f₁) = (m ⊨ f) × (m ⊨ f₁)
@@ -557,10 +586,11 @@ sat-rule M (rule Premises Conclusion) = sat-sequents M Premises → sat-sequent 
 
 ⟦⊆⟧ᵣ : {Γ Δ : Ctxt} (m : Sub Γ) (e : Γ ⊆ Δ) (s : Sub Δ) (⊆s : Sub⊆ e m s) (a : Res Γ)
      → ⟦ ↑ᵣ e a ⟧ᵣ s ≡ ⟦ a ⟧ᵣ m
-⟦⊆⟧ᵣ {Γ} {Δ} m e s ⊆s (var i) = sym (app-sub-Sub⊆ i e m s ⊆s)
+⟦⊆⟧ᵣ {Γ} {Δ} m e s ⊆s (𝐯 i) = sym (app-sub-Sub⊆ i e m s ⊆s)
 ⟦⊆⟧ᵣ {Γ} {Δ} m e s ⊆s 𝟎 = refl
 --⟦⊆⟧ᵣ {Γ} {Δ} m e s ⊆s (𝐬 a) = cong 𝕤 (⟦⊆⟧ᵣ m e s ⊆s a)
 ⟦⊆⟧ᵣ {Γ} {Δ} m e s ⊆s (a ⋆ a₁) = cong₂ _·_ (⟦⊆⟧ᵣ m e s ⊆s a) (⟦⊆⟧ᵣ m e s ⊆s a₁)
+⟦⊆⟧ᵣ {Γ} {Δ} m e s ⊆s (rvar ρ) = refl
 
 ⊨A-↑⊆→ : {Γ Δ : Ctxt} {M : Model Γ} {a : SetAtom Γ} (s : Sub Δ)
          (e : Γ ⊆ Δ)
@@ -592,6 +622,7 @@ mutual
     subst (Model.interp m (Model.run m (Model.w m)))
           (⟦⊆⟧ₐ (Model.subΓ m) e s ⊆s x)
           h
+  ⊨-↑⊆→ {Γ} {Δ} {m} {var x} s e ⊆s h = h
   ⊨-↑⊆→ {Γ} {Δ} {m} {⊤·} s e ⊆s h = h
   ⊨-↑⊆→ {Γ} {Δ} {m} {⊥·} s e ⊆s h = h
   ⊨-↑⊆→ {Γ} {Δ} {m} {F ∧· F₁} s e ⊆s (h , q) =
@@ -655,6 +686,7 @@ mutual
     subst (Model.interp m (Model.run m (Model.w m)))
           (sym (⟦⊆⟧ₐ (Model.subΓ m) e s ⊆s x))
           h
+  →⊨-↑⊆ {Γ} {Δ} {m} {var x} s e ⊆s h = h
   →⊨-↑⊆ {Γ} {Δ} {m} {⊤·} s e ⊆s h = h
   →⊨-↑⊆ {Γ} {Δ} {m} {⊥·} s e ⊆s h = h
   →⊨-↑⊆ {Γ} {Δ} {m} {F ∧· F₁} s e ⊆s (h , q) =
@@ -1029,10 +1061,11 @@ sub≔= {Γ} {.(_ ، u)} m@(model interp run w sub₁) (s ⹁ u ∶ v) =
              (x : Res ((Γ ، u) ＋ Δ))
            → ⟦ sub-Res x (CSub،＋ v) ⟧ᵣ (m ＋ₛ s)
            ≡ ⟦ x ⟧ᵣ ((m ⹁ u ∶ ⟦ u ، v ⟧c m) ＋ₛ s)
-＋→sub-res {Γ} {Δ} {u} m s v (var i) = ＋→sub-res-var m s v i
+＋→sub-res {Γ} {Δ} {u} m s v (𝐯 i) = ＋→sub-res-var m s v i
 ＋→sub-res {Γ} {Δ} {u} m s v 𝟎 = refl
 --＋→sub-res {Γ} {Δ} {u} m s v (𝐬 x) = cong 𝕤 (＋→sub-res m s v x)
 ＋→sub-res {Γ} {Δ} {u} m s v (r₁ ⋆ r₂) = cong₂ _·_ (＋→sub-res m s v r₁) (＋→sub-res m s v r₂)
+＋→sub-res {Γ} {Δ} {u} m s v (rvar ρ) = refl
 
 ≔→sub-res : {Γ Δ : Ctxt} {u : 𝕍} (m : Model Γ) (s : Sub Δ)
             (v : C⟦𝕍⟧ Γ u)
@@ -1049,6 +1082,14 @@ interp-≔= : {Γ Δ : Ctxt} (m : Model Γ)
           → Model.interp (m ≔= s) ≡ Model.interp m
 interp-≔= {Γ} {.⟨⟩} (model interp run w subΓ) ● = refl
 interp-≔= {Γ} {.(_ ، u)} m (s ⹁ u ∶ v) = interp-≔= m s
+
+{--
+vars-≔= : {Γ Δ : Ctxt} (m : Model Γ)
+          (s : Sub Δ)
+        → Model.vars (m ≔= s) ≡ Model.vars m
+vars-≔= {Γ} {.⟨⟩} (model interp run w subΓ vars) ● = refl
+vars-≔= {Γ} {.(_ ، u)} m (s ⹁ u ∶ v) = vars-≔= m s
+--}
 
 run-≔= : {Γ Δ : Ctxt} (m : Model Γ)
          (s : Sub Δ)
@@ -1111,6 +1152,10 @@ mutual
                           (w-≔= (m ≔ ⟦ u ، v ⟧c· m) s)
                           h))
   -- use ≔→sub-atom
+  ≔→sub-gen Γ Δ {m} {u} (var x) v s h =
+    h {--subst (λ z → z x)
+          (sym (vars-≔= m s))
+          (subst (λ z → z x) (vars-≔= (m ≔ ⟦ u ، v ⟧c· m) s) h)--}
   ≔→sub-gen Γ Δ {m} {u} ⊤· v s h = h
   ≔→sub-gen Γ Δ {m} {u} (A ∧· A₁) v s (h₁ , h₂) =
     ≔→sub-gen Γ Δ A v s h₁ ,
@@ -1230,6 +1275,10 @@ mutual
                           (run-≔= m s)
                           (w-≔= m s)
                           h))
+  ≔→sub-gen-rev Γ Δ {m} {u} (var x) v s h =
+    h {--subst (λ z → z x)
+          (sym (vars-≔= (m ≔ ⟦ u ، v ⟧c· m) s))
+          (subst (λ z → z x) (vars-≔= m s) h)--}
   ≔→sub-gen-rev Γ Δ {m} {u} ⊤· v s h = h
   ≔→sub-gen-rev Γ Δ {m} {u} (A ∧· A₁) v s (h₁ , h₂) =
     ≔→sub-gen-rev Γ Δ A v s h₁ ,
@@ -2032,5 +2081,326 @@ sat-ctxt-annot⊥ : {Γ : Ctxt} (a : CE Γ) (M : Model Γ)
                 → isNonEmpty M a
                 → ⊥
 sat-ctxt-annot⊥ {Γ} (CEi x) M h (w , q) = lower (h w q)
+
+sat-ctxt-annot-↑₀ : {Γ : Ctxt} {u : 𝕍} (M : Model (Γ ، u)) (f : Form Γ) (a : CE Γ)
+                  → sat-ctxt-annot (↑₀ f) (↑CE₀ a) M
+                  → sat-ctxt-annot f a (Model،→ M)
+sat-ctxt-annot-↑₀ {Γ} {u} M@(model interp run w (sub ⹁ .u ∶ v)) f (CEr r) h =
+  ⊨⊨ₜ-↑₀→ {Γ} {model interp run w sub} {f} {u} v (⟦ r ⟧ᵣ sub)
+          (subst (λ t → (M ≔ₜ t) ⊨ (↑₀ f)) (⟦↑ᵣ₀⟧ᵣ r sub u v) h)
+sat-ctxt-annot-↑₀ {Γ} {u} M@(model interp run w (sub ⹁ .u ∶ v)) f CEu h =
+  ⊨-↑₀→ {Γ} {model interp run w sub} {f} {u} v h
+sat-ctxt-annot-↑₀ {Γ} {u} M@(model interp run w (sub ⹁ .u ∶ v)) f (CEi i) h w′ cond =
+  ⊨-↑₀→ {Γ} {model interp run w′ sub} {f} {u} v
+        (h w′ (inter-cond↑⊆← {Γ} {Γ ، u} {model interp run w sub} w′ i (sub ⹁ u ∶ v)
+                (λ {x} → ∈CtxtS u) (λ {u} v₁ → ∈SubS sub v) cond))
+
+→sat-ctxt-annot-↑₀ : {Γ : Ctxt} {u : 𝕍} (M : Model (Γ ، u)) (f : Form Γ) (a : CE Γ)
+                   → sat-ctxt-annot f a (Model،→ M)
+                   → sat-ctxt-annot (↑₀ f) (↑CE₀ a) M
+→sat-ctxt-annot-↑₀ {Γ} {u} M@(model interp run w (sub ⹁ .u ∶ v)) f (CEr r) h =
+  subst (λ t → (M ≔ₜ t) ⊨ (↑₀ f))
+        (sym (⟦↑ᵣ₀⟧ᵣ r sub u v))
+        (→⊨⊨ₜ-↑₀  {Γ} {model interp run w sub} {f} {u} v (⟦ r ⟧ᵣ sub) h)
+→sat-ctxt-annot-↑₀ {Γ} {u} M@(model interp run w (sub ⹁ .u ∶ v)) f CEu h =
+  →⊨-↑₀ {Γ} {model interp run w sub} {f} {u} v h
+→sat-ctxt-annot-↑₀ {Γ} {u} M@(model interp run w (sub ⹁ .u ∶ v)) f (CEi i) h w′ cond =
+  →⊨-↑₀ {Γ} {model interp run w′ sub} {f} {u} v
+        (h w′ (inter-cond↑⊆ w′ i (sub ⹁ u ∶ v) ⊆₀ Sub⊆-⊆₀ cond))
+
+ℂtxt⊆ : {Γ : Ctxt} (c : ℂ Γ) → Γ ⊆ ℂtxt c
+ℂtxt⊆ ℂ⟨⟩        = ⊆-refl
+ℂtxt⊆ (ℂx c f a) = ℂtxt⊆ c
+ℂtxt⊆ (ℂv c v)   = ⊆-trans (ℂtxt⊆ c) ⊆₀
+
+FormSub : Ctxt → Set₁
+FormSub Γ = FormVar → Form Γ
+
+-- syntactic FormSub
+data FormSub⋆ (Γ : Ctxt) : Set₁ where
+  ● : FormSub⋆ Γ
+  _↦_⨾_ : FormVar → Form Γ → FormSub⋆ Γ → FormSub⋆ Γ
+
+-- Syntactic sub-context
+data _⊆⋆_ : Ctxt → Ctxt → Set where
+  ⊆⋆-init : (Γ : Ctxt) → ⟨⟩ ⊆⋆ Γ
+  ⊆⋆-add  : {Γ Δ : Ctxt} (v : 𝕍) → Γ ⊆⋆ Δ → Γ ، v ⊆⋆ Δ ، v
+  ⊆⋆-skip : {Γ Δ : Ctxt} (v : 𝕍) → Γ ⊆⋆ Δ → Γ ⊆⋆ Δ ، v
+
+⊆⋆، : {Γ Δ : Ctxt} (u : 𝕍)
+    → Γ ⊆⋆ Δ
+    → (Γ ، u) ⊆⋆ (Δ ، u)
+⊆⋆، {Γ} {Δ} u s = ⊆⋆-add u s
+
+⊆⋆-refl : {Γ : Ctxt} → Γ ⊆⋆ Γ
+⊆⋆-refl {⟨⟩} = ⊆⋆-init ⟨⟩
+⊆⋆-refl {Γ ، U} = ⊆⋆-add U ⊆⋆-refl
+
+⊆⋆-trans : {Γ Δ Ψ : Ctxt} → Γ ⊆⋆ Δ → Δ ⊆⋆ Ψ → Γ ⊆⋆ Ψ
+⊆⋆-trans {Γ} {Δ} {Ψ} (⊆⋆-init .⟨⟩) (⊆⋆-init .Ψ) = ⊆⋆-init Ψ
+⊆⋆-trans {Γ} {Δ} {Ψ} (⊆⋆-init .(_ ، v)) (⊆⋆-add v t) = ⊆⋆-init (_ ، v)
+⊆⋆-trans {Γ} {Δ} {Ψ} (⊆⋆-add .v s) (⊆⋆-add v t) = ⊆⋆-add v (⊆⋆-trans s t)
+⊆⋆-trans {Γ} {Δ} {Ψ} (⊆⋆-skip .v s) (⊆⋆-add v t) = ⊆⋆-skip v (⊆⋆-trans s t)
+⊆⋆-trans {Γ} {Δ} {Ψ} s (⊆⋆-skip v t) = ⊆⋆-skip v (⊆⋆-trans s t)
+
+⊆⋆₀ : {Γ : Ctxt} {u : 𝕍} → Γ ⊆⋆ (Γ ، u)
+⊆⋆₀ {Γ} {u} = ⊆⋆-skip _ ⊆⋆-refl
+
+ℂtxt⊆⋆ : {Γ : Ctxt} (c : ℂ Γ) → Γ ⊆⋆ ℂtxt c
+ℂtxt⊆⋆ ℂ⟨⟩        = ⊆⋆-refl
+ℂtxt⊆⋆ (ℂx c f a) = ℂtxt⊆⋆ c
+ℂtxt⊆⋆ (ℂv c v)   = ⊆⋆-trans (ℂtxt⊆⋆ c) ⊆⋆₀
+
+app-⊆⋆ : {Γ Δ : Ctxt} (s : Γ ⊆⋆ Δ) (v : 𝕍)
+       → ∈Ctxt v Γ
+       → ∈Ctxt v Δ
+app-⊆⋆ {Γ} {Δ} (⊆⋆-add v₁ s) v (∈Ctxt0 _) = ∈Ctxt0 _
+app-⊆⋆ {Γ} {Δ} (⊆⋆-add v₁ s) v (∈CtxtS .v₁ i) = ∈CtxtS v₁ (app-⊆⋆ s v i)
+app-⊆⋆ {Γ} {Δ} (⊆⋆-skip v₁ s) v i = ∈CtxtS v₁ (app-⊆⋆ s v i)
+
+↑⋆ᵢ : {Γ Δ : Ctxt} (s : Γ ⊆⋆ Δ) → Agent Γ → Agent Δ
+↑⋆ᵢ s (agentV i) = agentV (app-⊆⋆ s _ i)
+↑⋆ᵢ s (agentC x) = agentC x
+
+↑⋆ₛ : {Γ Δ : Ctxt} (s : Γ ⊆⋆ Δ) → Agents Γ → Agents Δ
+↑⋆ₛ s (agentsV i) = agentsV (app-⊆⋆ s _ i)
+↑⋆ₛ s (agentsL l) = agentsL (Data.List.map (↑⋆ᵢ s) l)
+
+↑⋆ₚ : {Γ Δ : Ctxt} (s : Γ ⊆⋆ Δ) → AtomProp Γ → AtomProp Δ
+↑⋆ₚ s (atomPropV i) = atomPropV (app-⊆⋆ s _ i)
+↑⋆ₚ s (atomPropC x) = atomPropC x
+
+↑⋆d : {Γ Δ : Ctxt} (s : Γ ⊆⋆ Δ) → Data Γ → Data Δ
+↑⋆d s (dataV i) = dataV (app-⊆⋆ s _ i)
+↑⋆d s (dataC x) = dataC x
+
+↑⋆ₜ : {Γ Δ : Ctxt} (s : Γ ⊆⋆ Δ) → Action Γ → Action Δ
+↑⋆ₜ s (ActSend p a A) = ActSend (↑⋆d s p) (↑⋆ᵢ s a) (↑⋆ₛ s A)
+
+↑⋆ₑ : {Γ Δ : Ctxt} (s : Γ ⊆⋆ Δ) → Event Γ → Event Δ
+↑⋆ₑ s (EvtReceive p a b) = EvtReceive (↑⋆d s p) (↑⋆ᵢ s a) (↑⋆ᵢ s b)
+↑⋆ₑ s (EvtInternal a d) = EvtInternal (↑⋆ᵢ s a) (↑⋆d s d)
+
+↑⋆f : {Γ Δ : Ctxt} (s : Γ ⊆⋆ Δ) → Fault Γ → Fault Δ
+↑⋆f s (FaultCorrect a b) = FaultCorrect (↑⋆ᵢ s a) (↑⋆ᵢ s b)
+
+↑⋆ₐ : {Γ Δ : Ctxt} (s : Γ ⊆⋆ Δ) → Atom Γ → Atom Δ
+↑⋆ₐ s (atProp    x) = atProp (↑⋆ₚ s x)
+↑⋆ₐ s (atAction  x) = atAction (↑⋆ₜ s x)
+↑⋆ₐ s (atEvent   x) = atEvent (↑⋆ₑ s x)
+↑⋆ₐ s (atCorrect x) = atCorrect (↑⋆f s x)
+
+↑⋆ᵣ : {Γ Δ : Ctxt} (s : Γ ⊆⋆ Δ) → Res Γ → Res Δ
+↑⋆ᵣ s (𝐯 x) = 𝐯 (app-⊆⋆ s _ x)
+↑⋆ᵣ s 𝟎 = 𝟎
+↑⋆ᵣ s (t ⋆ t₁) = ↑⋆ᵣ s t ⋆ ↑⋆ᵣ s t₁
+↑⋆ᵣ s (rvar ρ) = rvar ρ
+
+↑⋆A : {Γ Δ : Ctxt} (s : Γ ⊆⋆ Δ) → SetAtom Γ → SetAtom Δ
+↑⋆A {Γ} {Δ} s (a ∈ₐ A) = ↑⋆ᵢ s a ∈ₐ ↑⋆ₛ s A
+↑⋆A {Γ} {Δ} s (∣ A ∣ₛ＝ n) = ∣ ↑⋆ₛ s A ∣ₛ＝ n
+
+-- Syntactic lifting
+↑⋆ : {Γ Δ : Ctxt}
+   → Γ ⊆⋆ Δ
+   → Form Γ
+   → Form Δ
+--↑⋆ {⟨⟩} {⟨⟩} (⊆⋆-init ⟨⟩) f = f
+↑⋆ {Γ} {Δ} s (𝕒 x) = 𝕒 (↑⋆ₐ s x)
+↑⋆ {Γ} {Δ} s (var x) = var x
+↑⋆ {Γ} {Δ} s ⊤· = ⊤·
+↑⋆ {Γ} {Δ} s ⊥· = ⊥·
+↑⋆ {Γ} {Δ} s (f ∧· f₁) = ↑⋆ s f ∧· ↑⋆ s f₁
+↑⋆ {Γ} {Δ} s (f ∨· f₁) = ↑⋆ s f ∨· ↑⋆ s f₁
+↑⋆ {Γ} {Δ} s (f →· f₁) = ↑⋆ s f →· ↑⋆ s f₁
+↑⋆ {Γ} {Δ} s (∀· u f) = ∀· u (↑⋆ (⊆⋆، (𝕍𝕌 u) s) f)
+↑⋆ {Γ} {Δ} s (∃· u f) = ∃· u (↑⋆ (⊆⋆، (𝕍𝕌 u) s) f)
+↑⋆ {Γ} {Δ} s (𝔸 A) = 𝔸 (↑⋆A s A)
+↑⋆ {Γ} {Δ} s (f Ｕ f₁) = ↑⋆ s f Ｕ ↑⋆ s f₁
+↑⋆ {Γ} {Δ} s (Ｏ f) = Ｏ (↑⋆ s f)
+↑⋆ {Γ} {Δ} s (f Ｓ f₁) = ↑⋆ s f Ｓ ↑⋆ s f₁
+↑⋆ {Γ} {Δ} s (Ｙ f) = Ｙ (↑⋆ s f)
+↑⋆ {Γ} {Δ} s (Ｂ f) = Ｂ (↑⋆ s f)
+↑⋆ {Γ} {Δ} s (Ｆ f) = Ｆ ↑⋆ (⊆⋆، 𝕍ℝ s) f
+↑⋆ {Γ} {Δ} s (t₁ ⟨ c ⟩ t₂) = ↑⋆ᵣ s t₁ ⟨ c ⟩ ↑⋆ᵣ s t₂
+
+↑⋆I : {Γ Δ : Ctxt}
+    → Γ ⊆⋆ Δ
+    → Interval Γ
+    → Interval Δ
+↑⋆I {Γ} {Δ} e ［ x , x₁ ］ = ［ ↑⋆ᵣ e x , ↑⋆ᵣ e x₁ ］
+↑⋆I {Γ} {Δ} e ［ x , x₁ ） = ［ ↑⋆ᵣ e x , ↑⋆ᵣ e x₁ ）
+↑⋆I {Γ} {Δ} e （ x , x₁ ］ = （ ↑⋆ᵣ e x , ↑⋆ᵣ e x₁ ］
+↑⋆I {Γ} {Δ} e （ x , x₁ ） = （ ↑⋆ᵣ e x , ↑⋆ᵣ e x₁ ）
+
+↑⋆CE : {Γ Δ : Ctxt}
+     → Γ ⊆⋆ Δ
+     → CE Γ
+     → CE Δ
+↑⋆CE {Γ} {Δ} e (CEr x) = CEr (↑⋆ᵣ e x)
+↑⋆CE {Γ} {Δ} e CEu = CEu
+↑⋆CE {Γ} {Δ} e (CEi x) = CEi (↑⋆I e x)
+
+{--
+FormSub : Ctxt → Set₁
+FormSub Γ = FormVar → (Δ : Ctxt) → Γ ⊆ Δ → Form Δ
+--}
+
+FormSub₀ : Set₁
+FormSub₀ = FormSub ⟨⟩
+
+FormSub⋆₀ : Set₁
+FormSub⋆₀ = FormSub⋆ ⟨⟩
+
+FormSub، : (Γ : Ctxt) (v : 𝕍)
+        → FormSub Γ
+        → FormSub (Γ ، v)
+FormSub، Γ v s n = ↑₀ (s n)
+
+FormSub⋆، : (Γ : Ctxt) (v : 𝕍)
+          → FormSub⋆ Γ
+          → FormSub⋆ (Γ ، v)
+FormSub⋆، Γ v ● = ●
+FormSub⋆، Γ v (x ↦ f ⨾ s) = x ↦ ↑⋆ ⊆⋆₀ f ⨾ FormSub⋆، Γ v s
+
+↑FormSub : {Γ Δ : Ctxt}
+         → Γ ⊆ Δ
+         → FormSub Γ
+         → FormSub Δ
+↑FormSub {Γ} {Δ} s σ n = ↑ s (σ n)
+
+↑FormSub⋆ : {Γ Δ : Ctxt}
+          → Γ ⊆⋆ Δ
+          → FormSub⋆ Γ
+          → FormSub⋆ Δ
+↑FormSub⋆ {Γ} {Δ} s ● = ●
+↑FormSub⋆ {Γ} {Δ} s (x ↦ x₁ ⨾ σ) = x ↦ ↑⋆ s x₁ ⨾ ↑FormSub⋆ s σ
+
+app-FormSub⋆ : {Γ : Ctxt} (v : FormVar) (σ : FormSub⋆ Γ) → Form Γ
+app-FormSub⋆ {Γ} v ● = var v
+app-FormSub⋆ {Γ} v (x ↦ f ⨾ σ) with v ≟ x
+... | yes refl = f
+... | no p = app-FormSub⋆ v σ
+
+substF : {Γ : Ctxt} → FormSub Γ → Form Γ → Form Γ
+substF {Γ} σ (𝕒 x) = 𝕒 x
+substF {Γ} σ (var x) = σ x
+substF {Γ} σ ⊤· = ⊤·
+substF {Γ} σ ⊥· = ⊥·
+substF {Γ} σ (f ∧· f₁) = substF σ f ∧· substF σ f₁
+substF {Γ} σ (f ∨· f₁) = substF σ f ∨· substF σ f₁
+substF {Γ} σ (f →· f₁) = substF σ f →· substF σ f₁
+substF {Γ} σ (∀· u f) = ∀· u (substF (FormSub، Γ (𝕍𝕌 u) σ) f)
+substF {Γ} σ (∃· u f) = ∃· u (substF (FormSub، Γ (𝕍𝕌 u) σ) f)
+substF {Γ} σ (𝔸 x) = 𝔸 x
+substF {Γ} σ (f Ｕ f₁) = substF σ f Ｕ substF σ f₁
+substF {Γ} σ (Ｏ f) = Ｏ (substF σ f)
+substF {Γ} σ (f Ｓ f₁) = substF σ f Ｓ substF σ f₁
+substF {Γ} σ (Ｙ f) = Ｙ (substF σ f)
+substF {Γ} σ (Ｂ f) = Ｂ (substF σ f)
+substF {Γ} σ (Ｆ f) = Ｆ (substF (FormSub، Γ 𝕍ℝ σ) f)
+substF {Γ} σ (t₁ ⟨ x ⟩ t₂) = t₁ ⟨ x ⟩ t₂
+
+-- syntactic substitution
+substF⋆ : {Γ : Ctxt} → FormSub⋆ Γ → Form Γ → Form Γ
+substF⋆ {Γ} σ (𝕒 x) = 𝕒 x
+substF⋆ {Γ} σ (var x) = app-FormSub⋆ x σ
+substF⋆ {Γ} σ ⊤· = ⊤·
+substF⋆ {Γ} σ ⊥· = ⊥·
+substF⋆ {Γ} σ (f ∧· f₁) = substF⋆ σ f ∧· substF⋆ σ f₁
+substF⋆ {Γ} σ (f ∨· f₁) = substF⋆ σ f ∨· substF⋆ σ f₁
+substF⋆ {Γ} σ (f →· f₁) = substF⋆ σ f →· substF⋆ σ f₁
+substF⋆ {Γ} σ (∀· u f) = ∀· u (substF⋆ (FormSub⋆، Γ (𝕍𝕌 u) σ) f)
+substF⋆ {Γ} σ (∃· u f) = ∃· u (substF⋆ (FormSub⋆، Γ (𝕍𝕌 u) σ) f)
+substF⋆ {Γ} σ (𝔸 x) = 𝔸 x
+substF⋆ {Γ} σ (f Ｕ f₁) = substF⋆ σ f Ｕ substF⋆ σ f₁
+substF⋆ {Γ} σ (Ｏ f) = Ｏ (substF⋆ σ f)
+substF⋆ {Γ} σ (f Ｓ f₁) = substF⋆ σ f Ｓ substF⋆ σ f₁
+substF⋆ {Γ} σ (Ｙ f) = Ｙ (substF⋆ σ f)
+substF⋆ {Γ} σ (Ｂ f) = Ｂ (substF⋆ σ f)
+substF⋆ {Γ} σ (Ｆ f) = Ｆ (substF⋆ (FormSub⋆، Γ 𝕍ℝ σ) f)
+substF⋆ {Γ} σ (t₁ ⟨ x ⟩ t₂) = t₁ ⟨ x ⟩ t₂
+
+{--
+subst⊨ : {Γ : Ctxt} (m : Model Γ) (f : Form Γ)
+         (σ : FormSub Γ)
+       → m ⊨ f
+       → m ⊨ substF σ f
+subst⊨ {Γ} m f σ h = ?
+--}
+
+≡-to-⊆ : {Γ Δ : Ctxt} (e : Γ ≡ Δ) → Γ ⊆ Δ
+≡-to-⊆ {Γ} {Δ} e = subst (λ z → Γ ⊆ z) e ⊆-refl
+
+↑≡ : {Γ Δ : Ctxt} (e : Γ ≡ Δ) (f : Form Γ) → Form Δ
+↑≡ {Γ} {Δ} e f = ↑ (≡-to-⊆ e) f
+
+↑CE≡ : {Γ Δ : Ctxt} (e : Γ ≡ Δ) (f : CE Γ) → CE Δ
+↑CE≡ {Γ} {Δ} e f = ↑CE (subst (λ z → Γ ⊆ z) e ⊆-refl) f
+
+substCtxt : {Γ : Ctxt} → FormSub Γ → ℂ Γ → ℂ Γ
+ℂtxt-substCtxt : {Γ : Ctxt} (σ : FormSub Γ) (c : ℂ Γ) → ℂtxt (substCtxt σ c) ≡ ℂtxt c
+
+-- If a 'formula variable' occurs under 'context variables' it could potentially be replaced by
+-- a formula that uses those 'context variables'. We're requiring here that the formulas we're
+-- substituting in are closed, which is not as general as it could...
+substCtxt {Γ} σ ℂ⟨⟩ = ℂ⟨⟩
+substCtxt {Γ} σ (ℂx c f a) =
+  ℂx (substCtxt σ c)
+     (↑≡ (sym (ℂtxt-substCtxt σ c)) (substF (↑FormSub (ℂtxt⊆ c) σ) f))
+     (↑CE≡ (sym (ℂtxt-substCtxt σ c)) a)
+substCtxt {Γ} σ (ℂv c v) = ℂv (substCtxt σ c) v
+
+ℂtxt-substCtxt {Γ} σ ℂ⟨⟩ = refl
+ℂtxt-substCtxt {Γ} σ (ℂx c f a) = ℂtxt-substCtxt σ c
+ℂtxt-substCtxt {Γ} σ (ℂv c v) = cong (λ z → z ، v) (ℂtxt-substCtxt σ c)
+
+substCtxt⋆ : {Γ : Ctxt} → FormSub⋆ Γ → ℂ Γ → ℂ Γ
+ℂtxt-substCtxt⋆ : {Γ : Ctxt} (σ : FormSub⋆ Γ) (c : ℂ Γ) → ℂtxt c ⊆⋆ ℂtxt (substCtxt⋆ σ c)
+
+substCtxt⋆ {Γ} σ ℂ⟨⟩ = ℂ⟨⟩
+substCtxt⋆ {Γ} σ (ℂx c f a) =
+  ℂx (substCtxt⋆ σ c)
+     (↑⋆ (ℂtxt-substCtxt⋆ σ c) (substF⋆ (↑FormSub⋆ (ℂtxt⊆⋆ c) σ) f))
+     (↑⋆CE (ℂtxt-substCtxt⋆ σ c) a)
+substCtxt⋆ {Γ} σ (ℂv c v) = ℂv (substCtxt⋆ σ c) v
+
+ℂtxt-substCtxt⋆ {Γ} σ ℂ⟨⟩ = ⊆⋆-refl
+ℂtxt-substCtxt⋆ {Γ} σ (ℂx c f a) = ℂtxt-substCtxt⋆ σ c
+ℂtxt-substCtxt⋆ {Γ} σ (ℂv c v) = ⊆⋆-add _ (ℂtxt-substCtxt⋆ σ c)
+
+{--
+substCtxt σ ℂ⟨⟩        = ℂ⟨⟩
+substCtxt σ (ℂx c f a) = ℂx (substCtxt σ c) (substF (↑ (ℂtxt⊆ c) ∘ σ) f) a
+substCtxt σ (ℂv c v)   = ℂv (substCtxt σ c) v
+--}
+
+substSequent : FormSub₀ → Sequent → Sequent
+substSequent σ (seq Δ T C) =
+  seq (substCtxt σ Δ)
+      (↑CE≡ (sym (ℂtxt-substCtxt σ Δ)) T)
+      (↑≡ (sym (ℂtxt-substCtxt σ Δ)) (substF (↑FormSub (ℂtxt⊆ Δ) σ) C))
+substSequent σ (nonEmpty Δ R) =
+  nonEmpty (substCtxt σ Δ)
+           (↑CE≡ (sym (ℂtxt-substCtxt σ Δ)) R)
+
+substSequent⋆ : FormSub⋆₀ → Sequent → Sequent
+substSequent⋆ σ (seq Δ T C) =
+  seq (substCtxt⋆ σ Δ)
+      (↑⋆CE (ℂtxt-substCtxt⋆ σ Δ) T)
+      (↑⋆ (ℂtxt-substCtxt⋆ σ Δ) (substF⋆ (↑FormSub⋆ (ℂtxt⊆⋆ Δ) σ) C))
+substSequent⋆ σ (nonEmpty Δ R) =
+  nonEmpty (substCtxt⋆ σ Δ)
+           (↑⋆CE (ℂtxt-substCtxt⋆ σ Δ) R)
+
+substRule : FormSub₀ → Rule → Rule
+substRule σ (rule p c) = rule (Data.List.map (substSequent σ) p) (substSequent σ c)
+
+substRule⋆ : FormSub⋆₀ → Rule → Rule
+substRule⋆ σ (rule p c) = rule (Data.List.map (substSequent⋆ σ) p) (substSequent⋆ σ c)
+
+sat-rule-test-id : (M : Model₀)
+                 → sat-rule M (rule [] (seq ℂ⟨⟩ (CEr 𝟎) (var 0 →· var 0)))
+sat-rule-test-id M p s h = λ z → z
 
 \end{code}

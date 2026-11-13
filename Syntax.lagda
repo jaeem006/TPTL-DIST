@@ -127,13 +127,16 @@ data Atom (Γ : Ctxt) : Set₁ where
 atom : Set₁
 atom = Atom ⟨⟩
 
+ResVar : Set
+ResVar = ℕ
 
 -- Res (resource)
 data Res (Γ : Ctxt) : Set where
-  var : (i : ∈Ctxt  𝕍World Γ) → Res Γ
+  𝐯   : (i : ∈Ctxt  𝕍World Γ) → Res Γ
   𝟎   : Res Γ
 --  𝐬   : Res Γ → Res Γ
   _⋆_ : Res Γ → Res Γ → Res Γ
+  rvar : ResVar → Res Γ
 
 infixl 50 _⋆_
 
@@ -151,8 +154,12 @@ data SetAtom : (Γ : Ctxt) → Set where
   _∈ₐ_    : {Γ : Ctxt} → Agent Γ → Agents Γ → SetAtom Γ
   ∣_∣ₛ＝_ : {Γ : Ctxt} → Agents Γ → ℕ → SetAtom Γ
 
+FormVar : Set
+FormVar = ℕ
+
 data Form : (Γ : Ctxt) → Set₁ where
   𝕒     : {Γ : Ctxt} → Atom Γ → Form Γ
+  var   : {Γ : Ctxt} → FormVar → Form Γ
   -- Propositional logic
   ⊤·    : {Γ : Ctxt} → Form Γ
   ⊥·    : {Γ : Ctxt} → Form Γ
@@ -355,6 +362,15 @@ recv[ b ⇐ p ⇐ a ] = 𝕒 (atEvent (EvtReceive p a b))
 
 𝕕2 : {Γ : Ctxt} {u v : 𝕍} → Data (Γ ، 𝕍Data ، u ، v)
 𝕕2 {Γ} {u} {v} = dataV 𝕔2
+
+𝐯0 : {Γ : Ctxt} → Form Γ
+𝐯0 {Γ} = var 0
+
+𝐯1 : {Γ : Ctxt} → Form Γ
+𝐯1 {Γ} = var 1
+
+𝐯2 : {Γ : Ctxt} → Form Γ
+𝐯2 {Γ} = var 2
 
 
 ------

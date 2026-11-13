@@ -1,5 +1,6 @@
 \begin{code}
 {-# OPTIONS --with-K #-}
+{-# OPTIONS --safe #-}
 
 open import Level using (Level ; 0ℓ ; Lift ; lift ; lower) renaming (suc to lsuc)
 

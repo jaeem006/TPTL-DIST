@@ -14,7 +14,7 @@ open import Data.Unit using (⊤ ; tt)
 open import Data.Empty
 
 open import Relation.Nullary
-open import Relation.Binary.PropositionalEquality using (sym ; trans ; subst)
+open import Relation.Binary.PropositionalEquality using (sym ; trans ; subst ; dsubst₂)
 
 module Misc where
 
@@ -52,6 +52,12 @@ subst₄ : ∀ {a b c d e : Level} {A : Set a} {B : Set b} {C : Set c} {D : Set 
          (f : A → B → C → D → Set(e)) {x y u v m n p q}
        → x ≡ y → u ≡ v → m ≡ n → p ≡ q → f x u m p → f y v n q
 subst₄ f refl refl refl refl h = h
+
+dsubst₃ : ∀ {a b c d : Level}
+          {A : Set a} {B : A → Set b} {C : (x : A) → B x → Set c} (D : (x : A) (y : B x) (z : C x y) → Set d)
+          {x₁ x₂ y₁ y₂ z₁ z₂} (p : x₁ ≡ x₂) (q : subst B p y₁ ≡ y₂) → dsubst₂ C p q z₁ ≡ z₂
+        → D x₁ y₁ z₁ → D x₂ y₂ z₂
+dsubst₃ D refl refl refl d = d
 
 _⇔_ : {l : Level} → Set(l) → Set(l) → Set(l)
 a ⇔ b = (a → b) × (b → a)

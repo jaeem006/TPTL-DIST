@@ -1,5 +1,7 @@
 \begin{code}
 
+{-# OPTIONS --safe #-}
+
 open import Agda.Builtin.Equality
 
 open import Data.Product

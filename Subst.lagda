@@ -1,5 +1,7 @@
 \begin{code}
 
+{-# OPTIONS --safe #-}
+
 open import Level using (Level ; 0ℓ ; Lift ; lift ; lower) renaming (suc to lsuc)
 
 open import Agda.Builtin.Equality
@@ -127,10 +129,11 @@ _⊆_ : (Γ Δ : Ctxt) → Set
 ↑ₐ s (atCorrect x) = atCorrect (↑f s x)
 
 ↑ᵣ : {Γ Δ : Ctxt} (s : Γ ⊆ Δ) → Res Γ → Res Δ
-↑ᵣ s (var x) = var (s x)
+↑ᵣ s (𝐯 x) = 𝐯 (s x)
 ↑ᵣ s 𝟎 = 𝟎
 --↑ᵣ s (𝐬 t) = 𝐬 (↑ᵣ s t)
 ↑ᵣ s (t ⋆ t₁) = ↑ᵣ s t ⋆ ↑ᵣ s t₁
+↑ᵣ s (rvar ρ) = rvar ρ
 
 ↑ᵣ₀ : {Γ : Ctxt} {u : 𝕍} → Res Γ → Res (Γ ، u)
 ↑ᵣ₀ {Γ} {u} a = ↑ᵣ ⊆₀ a
@@ -272,6 +275,7 @@ _⊆_ : (Γ Δ : Ctxt) → Set
   → Form Γ
   → Form Δ
 ↑ {Γ} {Δ} s (𝕒 x) = 𝕒 (↑ₐ s x)
+↑ {Γ} {Δ} s (var x) = var x
 ↑ {Γ} {Δ} s ⊤· = ⊤·
 ↑ {Γ} {Δ} s ⊥· = ⊥·
 ↑ {Γ} {Δ} s (f ∧· f₁) = ↑ s f ∧· ↑ s f₁
@@ -409,10 +413,11 @@ _⊆_ : (Γ Δ : Ctxt) → Set
       (s₁ s₂ : Γ ⊆ Δ)
     → ≡⊆ s₁ s₂
     → ↑ᵣ s₁ r ≡ ↑ᵣ s₂ r
-≡↑ᵣ {Γ} {Δ} (var i) s₁ s₂ ≡s = cong var (≡s i)
+≡↑ᵣ {Γ} {Δ} (𝐯 i) s₁ s₂ ≡s = cong 𝐯 (≡s i)
 ≡↑ᵣ {Γ} {Δ} 𝟎 s₁ s₂ ≡s = refl
 --≡↑ᵣ {Γ} {Δ} (𝐬 r) s₁ s₂ ≡s = cong 𝐬 (≡↑ᵣ r s₁ s₂ ≡s)
 ≡↑ᵣ {Γ} {Δ} (r ⋆ r₁) s₁ s₂ ≡s = cong₂ _⋆_ (≡↑ᵣ r s₁ s₂ ≡s) (≡↑ᵣ r₁ s₁ s₂ ≡s)
+≡↑ᵣ {Γ} {Δ} (rvar ρ) s₁ s₂ ≡s = refl
 
 ≡↑A : {Γ Δ : Ctxt}
       (A : SetAtom Γ)
@@ -428,6 +433,7 @@ _⊆_ : (Γ Δ : Ctxt) → Set
    → ≡⊆ s₁ s₂
    → ↑ s₁ F ≡ ↑ s₂ F
 ≡↑ {Γ} {Δ} (𝕒 x) s₁ s₂ ≡s = cong 𝕒 (≡↑ₐ x s₁ s₂ ≡s)
+≡↑ {Γ} {Δ} (var x) s₁ s₂ ≡s = refl
 ≡↑ {Γ} {Δ} ⊤· s₁ s₂ ≡s = refl
 ≡↑ {Γ} {Δ} ⊥· s₁ s₂ ≡s = refl
 ≡↑ {Γ} {Δ} (f ∧· f₁) s₁ s₂ ≡s = cong₂ _∧·_ (≡↑ f s₁ s₂ ≡s) (≡↑ f₁ s₁ s₂ ≡s)
@@ -572,7 +578,7 @@ CSub Γ Δ = {u : 𝕍} (i : ∈Ctxt u Γ) → C⟦𝕍⟧ Δ u
 𝕌𝕌CSub-var {Γ} {𝕍ℝ}   i = i
 
 ℝCSub-var : {Γ : Ctxt} (i : ∈Ctxt 𝕍ℝ Γ) → C⟦ℝ⟧ Γ
-ℝCSub-var {Γ} i = var i
+ℝCSub-var {Γ} i = 𝐯 i
 
 CSub-var : {Γ : Ctxt} {u : 𝕍} (i : ∈Ctxt u Γ) → C⟦𝕍⟧ Γ u
 CSub-var {Γ} {𝕍𝕌 x} i = 𝕌CSub-var i
@@ -688,16 +694,18 @@ sub-Atom {Γ} {Δ} (atCorrect x) s = atCorrect (sub-Fault    x s)
 𝕌sub-Atom {Γ} {Δ} (atCorrect x) s = atCorrect (𝕌sub-Fault    x s)
 
 sub-Res : {Γ Δ : Ctxt} (r : Res Γ) (s : CSub Γ Δ) → Res Δ
-sub-Res {Γ} {Δ} (var i) s = s i
+sub-Res {Γ} {Δ} (𝐯 i) s = s i
 sub-Res {Γ} {Δ} 𝟎 s = 𝟎
 --sub-Res {Γ} {Δ} (𝐬 r) s = 𝐬 (sub-Res r s)
 sub-Res {Γ} {Δ} (r₁ ⋆ r₂) s = sub-Res r₁ s ⋆ sub-Res r₂ s
+sub-Res {Γ} {Δ} (rvar ρ) s = rvar ρ
 
 𝕌sub-Res : {Γ Δ : Ctxt} (r : Res Γ) (s : 𝕌CSub Γ Δ) → Res Δ
-𝕌sub-Res {Γ} {Δ} (var i) s = var (s i)
+𝕌sub-Res {Γ} {Δ} (𝐯 i) s = 𝐯 (s i)
 𝕌sub-Res {Γ} {Δ} 𝟎 s = 𝟎
 --𝕌sub-Res {Γ} {Δ} (𝐬 r) s = 𝐬 (𝕌sub-Res r s)
 𝕌sub-Res {Γ} {Δ} (r₁ ⋆ r₂) s = 𝕌sub-Res r₁ s ⋆ 𝕌sub-Res r₂ s
+𝕌sub-Res {Γ} {Δ} (rvar ρ) s = rvar ρ
 
 𝕌sub-SetAtom : {Γ Δ : Ctxt} (A : SetAtom Γ) (s : 𝕌CSub Γ Δ) → SetAtom Δ
 𝕌sub-SetAtom {Γ} {Δ} (a ∈ₐ A) s = 𝕌sub-Agent a s ∈ₐ 𝕌sub-Agents A s
@@ -706,6 +714,7 @@ sub-Res {Γ} {Δ} (r₁ ⋆ r₂) s = sub-Res r₁ s ⋆ sub-Res r₂ s
 -- substitution on the quantifiable variables only - resources are left untouched
 substitute : {Γ Δ : Ctxt} (f : Form Γ) (s : 𝕌CSub Γ Δ) → Form Δ
 substitute {Γ} {Δ} (𝕒 p) s = 𝕒 (𝕌sub-Atom p s)
+substitute {Γ} {Δ} (var x) s = var x
 substitute {Γ} {Δ} ⊤· s = ⊤·
 substitute {Γ} {Δ} ⊥· s = ⊥·
 substitute {Γ} {Δ} (f ∧· f₁) s = substitute f s ∧· substitute f₁ s
@@ -732,6 +741,7 @@ sub-SetAtom {Γ} {Δ} (∣ A ∣ₛ＝ n) s = ∣ sub-Agents A s ∣ₛ＝ n
 -- general substitution
 sub : {Γ Δ : Ctxt} (f : Form Γ) (s : CSub Γ Δ) → Form Δ
 sub {Γ} {Δ} (𝕒 p) s = 𝕒 (sub-Atom p s)
+sub {Γ} {Δ} (var x) s = var x
 sub {Γ} {Δ} ⊤· s = ⊤·
 sub {Γ} {Δ} ⊥· s = ⊥·
 sub {Γ} {Δ} (f ∧· f₁) s = sub f s ∧· sub f₁ s
@@ -759,10 +769,11 @@ sub-Resℝ {Γ} r s = sub-Res r (CSub،ₗ s)
 
 sub-Res-↑ᵣ₀ : (Γ : Ctxt) (u : 𝕍) (v : C⟦𝕍⟧ Γ u) (r : Res Γ)
             → sub-Res (↑ᵣ₀ r) (CSub،ₗ {Γ} {u} v) ≡ r
-sub-Res-↑ᵣ₀ Γ u v (var i) = refl
+sub-Res-↑ᵣ₀ Γ u v (𝐯 i) = refl
 sub-Res-↑ᵣ₀ Γ u v 𝟎 = refl
 --sub-Res-↑ᵣ₀ Γ u v (𝐬 r) = cong 𝐬 (sub-Res-↑ᵣ₀ Γ u v r)
 sub-Res-↑ᵣ₀ Γ u v (r ⋆ r₁) = cong₂ _⋆_ (sub-Res-↑ᵣ₀ Γ u v r) (sub-Res-↑ᵣ₀ Γ u v r₁)
+sub-Res-↑ᵣ₀ Γ u v (rvar ρ) = refl
 
 sub-Agent-↑ᵢ₀ : (Γ : Ctxt) (u : 𝕍) (v : C⟦𝕍⟧ Γ u) (a : Agent Γ)
               → sub-Agent (↑ᵢ₀ a) (CSub،ₗ {Γ} {u} v) ≡ a
@@ -860,7 +871,7 @@ CSub＋ {Γ₁} {Γ₂} {Δ ، U} s = CSub، U (CSub＋ s)
 ⊆＋،⋆ {Γ} {Δ} {Ψ} = ⊆،* {Γ} {Γ ＋ Δ} {Ψ} (⊆＋ {Γ} {Δ})
 
 CSub،＋-var-res : {Γ Δ : Ctxt} {u : 𝕍} (v : C⟦𝕍⟧ Γ u) (i : ∈Ctxt 𝕍World (Γ ＋ Δ))
-               → CSub،＋ {Γ} {Δ} {u} v (⊆،＋ i) ≡ var i
+               → CSub،＋ {Γ} {Δ} {u} v (⊆،＋ i) ≡ 𝐯 i
 CSub،＋-var-res {Γ} {⟨⟩} {u} v i = refl
 CSub،＋-var-res {Γ} {Δ ، .𝕍World} {u} v (∈Ctxt0 .(Γ ＋ Δ)) = refl
 CSub،＋-var-res {Γ} {Δ ، U} {u} v (∈CtxtS .U i) =
@@ -868,10 +879,11 @@ CSub،＋-var-res {Γ} {Δ ، U} {u} v (∈CtxtS .U i) =
 
 sub-Res-↑ᵣ،＋ : (Γ Δ : Ctxt) (u : 𝕍) (v : C⟦𝕍⟧ Γ u) (r : Res (Γ ＋ Δ))
              → sub-Res (↑ᵣ ⊆،＋ r) (CSub،＋ {Γ} {Δ} {u} v) ≡ r
-sub-Res-↑ᵣ،＋ Γ Δ u v (var i) = CSub،＋-var-res {Γ} {Δ} {u} v i
+sub-Res-↑ᵣ،＋ Γ Δ u v (𝐯 i) = CSub،＋-var-res {Γ} {Δ} {u} v i
 sub-Res-↑ᵣ،＋ Γ Δ u v 𝟎 = refl
 --sub-Res-↑ᵣ،＋ Γ Δ u v (𝐬 r) = cong 𝐬 (sub-Res-↑ᵣ،＋ Γ Δ u v r)
 sub-Res-↑ᵣ،＋ Γ Δ u v (r ⋆ r₁) = cong₂ _⋆_ (sub-Res-↑ᵣ،＋ Γ Δ u v r) (sub-Res-↑ᵣ،＋ Γ Δ u v r₁)
+sub-Res-↑ᵣ،＋ Γ Δ u v (rvar ρ) = refl
 
 CSub،＋-var-agent : {Γ Δ : Ctxt} {u : 𝕍} (v : C⟦𝕍⟧ Γ u) (i : ∈Ctxt 𝕍Agent (Γ ＋ Δ))
                  → CSub،＋ {Γ} {Δ} {u} v (⊆،＋ i) ≡ agentV i
@@ -959,6 +971,7 @@ sub-↑A،＋ Γ Δ u v (∣ A ∣ₛ＝ n) = cong (∣_∣ₛ＝ n) (sub-Agents
 sub-↑،＋ : (Γ Δ : Ctxt) (u : 𝕍) (v : C⟦𝕍⟧ Γ u) (f : Form (Γ ＋ Δ))
         → sub (↑ ⊆،＋ f) (CSub،＋ {Γ} {Δ} {u} v) ≡ f
 sub-↑،＋ Γ Δ u v (𝕒 x) = cong 𝕒 (sub-Atom-↑ₐ،＋ Γ Δ u v x)
+sub-↑،＋ Γ Δ u v (var x) = refl
 sub-↑،＋ Γ Δ u v ⊤· = refl
 sub-↑،＋ Γ Δ u v ⊥· = refl
 sub-↑،＋ Γ Δ u v (f ∧· f₁) = cong₂ _∧·_ (sub-↑،＋ Γ Δ u v f) (sub-↑،＋ Γ Δ u v f₁)
@@ -984,10 +997,11 @@ sub-↑₀ Γ u v f = sub-↑،＋ Γ ⟨⟩ u v f
 
 ↑ᵣ₁≡↑ᵣ₊₀ : {Γ : Ctxt} {u v : 𝕍} (r : Res Γ)
          → ↑ᵣ₁ {Γ} {u} {v} r ≡ ↑ᵣ (⊆،＋ {Γ} {⟨⟩ ، v} {u}) (↑ᵣ₀ {Γ} {v} r)
-↑ᵣ₁≡↑ᵣ₊₀ {Γ} {u} {v} (var i) = refl
+↑ᵣ₁≡↑ᵣ₊₀ {Γ} {u} {v} (𝐯 i) = refl
 ↑ᵣ₁≡↑ᵣ₊₀ {Γ} {u} {v} Res.𝟎 = refl
 --↑ᵣ₁≡↑ᵣ₊₀ {Γ} {u} {v} (𝐬 r) = cong 𝐬 (↑ᵣ₁≡↑ᵣ₊₀ r)
 ↑ᵣ₁≡↑ᵣ₊₀ {Γ} {u} {v} (r ⋆ r₁) = cong₂ _⋆_ (↑ᵣ₁≡↑ᵣ₊₀ r) (↑ᵣ₁≡↑ᵣ₊₀ r₁)
+↑ᵣ₁≡↑ᵣ₊₀ {Γ} {u} {v} (rvar ρ) = refl
 
 sub-Res-↑ᵣ₁₀ : (Γ : Ctxt) (u w : 𝕍) (v : C⟦𝕍⟧ Γ u) (r : Res Γ)
              → sub-Res (↑ᵣ₁ {Γ} {u} {w} r) (CSub، w (CSub،ₗ {Γ} {u} v)) ≡ ↑ᵣ₀ {Γ} {w} r
@@ -1002,10 +1016,11 @@ sub-Res-↑ᵣ₁₀ Γ u w v r =
            (r  : Res Γ)
          → ((v : 𝕍) (i : ∈Ctxt v Γ) → e i ≡ e₂ (e₁ i))
          → ↑ᵣ e r ≡ ↑ᵣ e₂ (↑ᵣ e₁ r)
-↑ᵣ-trans {Γ} {Ψ} {Δ} e e₁ e₂ (var i) cond = cong var (cond _ i)
+↑ᵣ-trans {Γ} {Ψ} {Δ} e e₁ e₂ (𝐯 i) cond = cong 𝐯 (cond _ i)
 ↑ᵣ-trans {Γ} {Ψ} {Δ} e e₁ e₂ 𝟎 cond = refl
 --↑ᵣ-trans {Γ} {Ψ} {Δ} e e₁ e₂ (𝐬 r) cond = cong 𝐬 (↑ᵣ-trans e e₁ e₂ r cond)
 ↑ᵣ-trans {Γ} {Ψ} {Δ} e e₁ e₂ (r ⋆ r₁) cond = cong₂ _⋆_ (↑ᵣ-trans e e₁ e₂ r cond) (↑ᵣ-trans e e₁ e₂ r₁ cond)
+↑ᵣ-trans {Γ} {Ψ} {Δ} e e₁ e₂ (rvar ρ) cond = refl
 
 ↑ₚ-trans : {Γ Ψ Δ : Ctxt}
            (e  : Γ ⊆ Δ)
@@ -1124,6 +1139,7 @@ sub-Res-↑ᵣ₁₀ Γ u w v r =
         → ((v : 𝕍) (i : ∈Ctxt v Γ) → e i ≡ e₂ (e₁ i))
         → ↑ e f ≡ ↑ e₂ (↑ e₁ f)
 ↑-trans {Γ} {Ψ} {Δ} e e₁ e₂ (𝕒 x) cond = cong 𝕒 (↑ₐ-trans e e₁ e₂ x cond)
+↑-trans {Γ} {Ψ} {Δ} e e₁ e₂ (var x) cond = refl
 ↑-trans {Γ} {Ψ} {Δ} e e₁ e₂ ⊤· cond = refl
 ↑-trans {Γ} {Ψ} {Δ} e e₁ e₂ ⊥· cond = refl
 ↑-trans {Γ} {Ψ} {Δ} e e₁ e₂ (f ∧· f₁) cond = cong₂ _∧·_ (↑-trans e e₁ e₂ f cond) (↑-trans e e₁ e₂ f₁ cond)
@@ -1401,10 +1417,11 @@ sub-Res-↑ᵣ₁ Γ u w v r =
           (r  : Res Γ)
         → ((v : 𝕍) (i : ∈Ctxt v Γ) → e i ≡ i)
         → ↑ᵣ e r ≡ r
-↑ᵣ-refl {Γ} e (var i) cond = cong var (cond _ i)
+↑ᵣ-refl {Γ} e (𝐯 i) cond = cong 𝐯 (cond _ i)
 ↑ᵣ-refl {Γ} e 𝟎 cond = refl
 --↑ᵣ-refl {Γ} e (𝐬 r) cond = cong 𝐬 (↑ᵣ-refl e r cond)
 ↑ᵣ-refl {Γ} e (r ⋆ r₁) cond = cong₂ _⋆_ (↑ᵣ-refl e r cond) (↑ᵣ-refl e r₁ cond)
+↑ᵣ-refl {Γ} e (rvar ρ) cond = refl
 
 ↑ᵢ-refl : {Γ : Ctxt}
           (e  : Γ ⊆ Γ)
@@ -1493,6 +1510,7 @@ sub-Res-↑ᵣ₁ Γ u w v r =
        → ((v : 𝕍) (i : ∈Ctxt v Γ) → e i ≡ i)
        → ↑ e f ≡ f
 ↑-refl {Γ} e (𝕒 x) cond = cong 𝕒 (↑ₐ-refl e x cond)
+↑-refl {Γ} e (var x) cond = refl
 ↑-refl {Γ} e ⊤· cond = refl
 ↑-refl {Γ} e ⊥· cond = refl
 ↑-refl {Γ} e (f ∧· f₁) cond = cong₂ _∧·_ (↑-refl e f cond) (↑-refl e f₁ cond)
@@ -1536,23 +1554,23 @@ sub-Res-↑ᵣ₁ Γ u w v r =
 
 -- Resource variable 0
 𝕣₀ : {Γ : Ctxt} → Res (Γ ، 𝕍ℝ)
-𝕣₀ {Γ} = var (∈Ctxt0 Γ)
+𝕣₀ {Γ} = 𝐯 (∈Ctxt0 Γ)
 
 -- Resource variable 1
 𝕣₁ : {Γ : Ctxt} {v : 𝕍} → Res (Γ ، 𝕍ℝ ، v)
-𝕣₁ {Γ} {v} = var (∈CtxtS v (∈Ctxt0 Γ))
+𝕣₁ {Γ} {v} = 𝐯 (∈CtxtS v (∈Ctxt0 Γ))
 
 -- Resource variable 2
 𝕣₂ : {Γ : Ctxt} {v w : 𝕍} → Res (Γ ، 𝕍ℝ ، v ، w)
-𝕣₂ {Γ} {v} {w} = var (∈CtxtS w (∈CtxtS v (∈Ctxt0 Γ)))
+𝕣₂ {Γ} {v} {w} = 𝐯 (∈CtxtS w (∈CtxtS v (∈Ctxt0 Γ)))
 
 -- Resource variable 3
 𝕣₃ : {Γ : Ctxt} {v w x : 𝕍} → Res (Γ ، 𝕍ℝ ، v ، w ، x)
-𝕣₃ {Γ} {v} {w} {x} = var (∈CtxtS x (∈CtxtS w (∈CtxtS v (∈Ctxt0 Γ))))
+𝕣₃ {Γ} {v} {w} {x} = 𝐯 (∈CtxtS x (∈CtxtS w (∈CtxtS v (∈Ctxt0 Γ))))
 
 -- Resource variable 4
 𝕣₄ : {Γ : Ctxt} {v w x y : 𝕍} → Res (Γ ، 𝕍ℝ ، v ، w ، x ، y)
-𝕣₄ {Γ} {v} {w} {x} {y} = var (∈CtxtS y (∈CtxtS x (∈CtxtS w (∈CtxtS v (∈Ctxt0 Γ)))))
+𝕣₄ {Γ} {v} {w} {x} {y} = 𝐯 (∈CtxtS y (∈CtxtS x (∈CtxtS w (∈CtxtS v (∈Ctxt0 Γ)))))
 
 -- Eventually ϕ holds "by" r
 ◇↓ : {Γ : Ctxt} → Res Γ → Form Γ → Form Γ
@@ -1662,10 +1680,11 @@ CSub＋-⊆＋،⋆ {Γ₁} {Γ₂} {Δ} {Ψ ، U} s {v} (∈CtxtS .U i) =
 sub-Res-↑ᵣ＋ : (Γ₁ Γ₂ Δ Ψ : Ctxt) (s : CSub Γ₁ Γ₂) (r : Res (Γ₁ ＋ Ψ))
              → sub-Res (↑ᵣ (⊆＋،⋆ {Γ₁} {Δ} {Ψ}) r) (CSub＋ {_} {_} {Ψ} (CSub＋ s))
              ≡ ↑ᵣ (⊆＋،⋆ {Γ₂} {Δ} {Ψ}) (sub-Res r (CSub＋ s))
-sub-Res-↑ᵣ＋ Γ₁ Γ₂ Δ Ψ s (var i) = CSub＋-⊆＋،⋆ s {𝕍World} i
+sub-Res-↑ᵣ＋ Γ₁ Γ₂ Δ Ψ s (𝐯 i) = CSub＋-⊆＋،⋆ s {𝕍World} i
 sub-Res-↑ᵣ＋ Γ₁ Γ₂ Δ Ψ s 𝟎 = refl
 --sub-Res-↑ᵣ＋ Γ₁ Γ₂ Δ Ψ s (𝐬 r) = cong 𝐬 (sub-Res-↑ᵣ＋ Γ₁ Γ₂ Δ Ψ s r)
 sub-Res-↑ᵣ＋ Γ₁ Γ₂ Δ Ψ s (r ⋆ r₁) = cong₂ _⋆_ (sub-Res-↑ᵣ＋ Γ₁ Γ₂ Δ Ψ s r) (sub-Res-↑ᵣ＋ Γ₁ Γ₂ Δ Ψ s r₁)
+sub-Res-↑ᵣ＋ Γ₁ Γ₂ Δ Ψ s (rvar ρ) = refl
 
 sub-AtomProp-↑ₚ＋ : (Γ₁ Γ₂ Δ Ψ : Ctxt) (s : CSub Γ₁ Γ₂) (p : AtomProp (Γ₁ ＋ Ψ))
                   → sub-AtomProp (↑ₚ (⊆＋،⋆ {Γ₁} {Δ} {Ψ}) p) (CSub＋ {_} {_} {Ψ} (CSub＋ s))
@@ -1744,6 +1763,7 @@ sub-↑＋ : (Γ₁ Γ₂ Δ Ψ : Ctxt) (s : CSub Γ₁ Γ₂) (f : Form (Γ₁ 
         → sub (↑ (⊆＋،⋆ {Γ₁} {Δ} {Ψ}) f) (CSub＋ {Γ₁ ＋ Δ} {Γ₂ ＋ Δ} {Ψ} (CSub＋ {Γ₁} {Γ₂} {Δ} s))
         ≡ ↑ (⊆＋،⋆ {Γ₂} {Δ} {Ψ}) (sub f (CSub＋ {Γ₁} {Γ₂} {Ψ} s))
 sub-↑＋ Γ₁ Γ₂ Δ Ψ s (𝕒 x) = cong 𝕒 (sub-Atom-↑ₐ＋ Γ₁ Γ₂ Δ Ψ s x)
+sub-↑＋ Γ₁ Γ₂ Δ Ψ s (var x) = refl
 sub-↑＋ Γ₁ Γ₂ Δ Ψ s ⊤· = refl
 sub-↑＋ Γ₁ Γ₂ Δ Ψ s ⊥· = refl
 sub-↑＋ Γ₁ Γ₂ Δ Ψ s (f ∧· f₁) = cong₂ _∧·_ (sub-↑＋ Γ₁ Γ₂ Δ Ψ s f) (sub-↑＋ Γ₁ Γ₂ Δ Ψ s f₁)
@@ -1966,10 +1986,11 @@ CSub＋-CSub،ₗ-𝕧0-⊆،*-⊆₀، Γ Δ u {w} i = CSub＋-⊆،* {Γ ، u 
 sub-Res-var0 : (Γ Δ : Ctxt) (u : 𝕍) (r : Res ((Γ ، u) ＋ Δ))
              → sub-Res (↑ᵣ (⊆،* {Γ ، u} {Γ ، u ، u} {Δ} (⊆₀، {_} {u} {u})) r) (CSub＋ {Γ ، u ، u} {Γ ، u} {Δ} (CSub،ₗ (𝕧0 {Γ} {u})))
              ≡ r
-sub-Res-var0 Γ Δ u (var i) = CSub＋-CSub،ₗ-𝕧0-⊆،*-⊆₀، Γ Δ u i
+sub-Res-var0 Γ Δ u (𝐯 i) = CSub＋-CSub،ₗ-𝕧0-⊆،*-⊆₀، Γ Δ u i
 sub-Res-var0 Γ Δ u 𝟎 = refl
 --sub-Res-var0 Γ Δ u (𝐬 r) = cong 𝐬 (sub-Res-var0 Γ Δ u r)
 sub-Res-var0 Γ Δ u (r ⋆ r₁) = cong₂ _⋆_ (sub-Res-var0 Γ Δ u r) (sub-Res-var0 Γ Δ u r₁)
+sub-Res-var0 Γ Δ u (rvar ρ) = refl
 
 sub-AtomProp-var0 : (Γ Δ : Ctxt) (u : 𝕍) (a : AtomProp ((Γ ، u) ＋ Δ))
                   → sub-AtomProp (↑ₚ (⊆،* {Γ ، u} {Γ ، u ، u} {Δ} (⊆₀، {_} {u} {u})) a) (CSub＋ {Γ ، u ، u} {Γ ، u} {Δ} (CSub،ₗ (𝕧0 {Γ} {u})))
@@ -2041,6 +2062,7 @@ sub-var0 : (Γ Δ : Ctxt) (u : 𝕍) (f : Form ((Γ ، u) ＋ Δ))
          → sub (↑ (⊆،* {Γ ، u} {Γ ، u ، u} {Δ} (⊆₀، {_} {u} {u})) f) (CSub＋ {Γ ، u ، u} {Γ ، u} {Δ} (CSub،ₗ (𝕧0 {Γ} {u})))
          ≡ f
 sub-var0 Γ Δ u (𝕒 x) = cong 𝕒 (sub-Atom-var0 Γ Δ u x)
+sub-var0 Γ Δ u (var x) = refl
 sub-var0 Γ Δ u ⊤· = refl
 sub-var0 Γ Δ u ⊥· = refl
 sub-var0 Γ Δ u (f ∧· f₁) = cong₂ _∧·_ (sub-var0 Γ Δ u f) (sub-var0 Γ Δ u f₁)
@@ -2169,5 +2191,365 @@ sub-◇↓◆ {Γ} {Δ} s r A =
       → (↑₂، {Γ} {u} {v} {x} {y} (↑₀ {Γ} {y} f)) ≡ ↑₃ {Γ} {u} {v} {x} {y} f
 ↑₂،-↑₀ {Γ} {u} {v} {x} {y} f =
   sym (↑-trans ⊆₃ ⊆₀ ⊆₂، f (λ _ _ → refl))
+
+
+𝕍𝕌-inj : {u v : 𝕌} → 𝕍𝕌 u ≡ 𝕍𝕌 v → u ≡ v
+𝕍𝕌-inj {u} {v} refl = refl
+
+𝐯-inj : {Γ : Ctxt} {i j : ∈Ctxt 𝕍ℝ Γ} → 𝐯 i ≡ 𝐯 j → i ≡ j
+𝐯-inj {Γ} {i} {j} refl = refl
+
+rvar-inj : {Γ : Ctxt} {i j : ResVar} → rvar {Γ} i ≡ rvar j → i ≡ j
+rvar-inj {Γ} {i} {j} refl = refl
+
+𝕒-inj : {Γ : Ctxt} {i j : Atom Γ} → 𝕒 i ≡ 𝕒 j → i ≡ j
+𝕒-inj {Γ} {i} {j} refl = refl
+
+var-inj : {Γ : Ctxt} {i j : FormVar} → var {Γ} i ≡ var {Γ} j → i ≡ j
+var-inj {Γ} {i} {j} refl = refl
+
+،-inj₁ : {Γ Δ : Ctxt} {u v : 𝕍} → Γ ، u ≡ Δ ، v → Γ ≡ Δ
+،-inj₁ {Γ} {Δ} {u} {v} refl = refl
+
+،-inj₂ : {Γ Δ : Ctxt} {u v : 𝕍} → Γ ، u ≡ Δ ، v → u ≡ v
+،-inj₂ {Γ} {Δ} {u} {v} refl = refl
+
+∧-inj₁ : {Γ : Ctxt} {a b c d : Form Γ} → a ∧· b ≡ c ∧· d → a ≡ c
+∧-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+∧-inj₂ : {Γ : Ctxt} {a b c d : Form Γ} → a ∧· b ≡ c ∧· d → b ≡ d
+∧-inj₂ {Γ} {a} {b} {c} {d} refl = refl
+
+∨-inj₁ : {Γ : Ctxt} {a b c d : Form Γ} → a ∨· b ≡ c ∨· d → a ≡ c
+∨-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+∨-inj₂ : {Γ : Ctxt} {a b c d : Form Γ} → a ∨· b ≡ c ∨· d → b ≡ d
+∨-inj₂ {Γ} {a} {b} {c} {d} refl = refl
+
+→-inj₁ : {Γ : Ctxt} {a b c d : Form Γ} → a →· b ≡ c →· d → a ≡ c
+→-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+→-inj₂ : {Γ : Ctxt} {a b c d : Form Γ} → a →· b ≡ c →· d → b ≡ d
+→-inj₂ {Γ} {a} {b} {c} {d} refl = refl
+
+∀-inj₁ : {Γ : Ctxt} {a b : 𝕌} {c : Form (Γ ، 𝕍𝕌 a)} {d : Form (Γ ، 𝕍𝕌 b)} → ∀· a c ≡ ∀· b d → a ≡ b
+∀-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+∀-inj₂ : {Γ : Ctxt} {a : 𝕌} {c : Form (Γ ، 𝕍𝕌 a)} {d : Form (Γ ، 𝕍𝕌 a)} → ∀· a c ≡ ∀· a d → c ≡ d
+∀-inj₂ {Γ} {a} {c} {d} refl = refl
+
+∈ₐ-inj₁ : {Γ : Ctxt} {a b : Agent Γ} {c d : Agents Γ} → a ∈ₐ c ≡ b ∈ₐ d → a ≡ b
+∈ₐ-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+∈ₐ-inj₂ : {Γ : Ctxt} {a b : Agent Γ} {c d : Agents Γ} → a ∈ₐ c ≡ b ∈ₐ d → c ≡ d
+∈ₐ-inj₂ {Γ} {a} {b} {c} {d} refl = refl
+
+∣∣ₛ-inj₁ : {Γ : Ctxt} {a b : Agents Γ} {c d : ℕ} → ∣ a ∣ₛ＝ c ≡ ∣ b ∣ₛ＝ d → a ≡ b
+∣∣ₛ-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+∣∣ₛ-inj₂ : {Γ : Ctxt} {a b : Agents Γ} {c d : ℕ} → ∣ a ∣ₛ＝ c ≡ ∣ b ∣ₛ＝ d → c ≡ d
+∣∣ₛ-inj₂ {Γ} {a} {b} {c} {d} refl = refl
+
+∃-inj₁ : {Γ : Ctxt} {a b : 𝕌} {c : Form (Γ ، 𝕍𝕌 a)} {d : Form (Γ ، 𝕍𝕌 b)} → ∃· a c ≡ ∃· b d → a ≡ b
+∃-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+∃-inj₂ : {Γ : Ctxt} {a : 𝕌} {c : Form (Γ ، 𝕍𝕌 a)} {d : Form (Γ ، 𝕍𝕌 a)} → ∃· a c ≡ ∃· a d → c ≡ d
+∃-inj₂ {Γ} {a} {c} {d} refl = refl
+
+𝔸-inj : {Γ : Ctxt} {a b : SetAtom Γ} → 𝔸 a ≡ 𝔸 b → a ≡ b
+𝔸-inj {Γ} {a} {b} refl = refl
+
+Ｕ-inj₁ : {Γ : Ctxt} {a b c d : Form Γ} → a Ｕ b ≡ c Ｕ d → a ≡ c
+Ｕ-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+Ｕ-inj₂ : {Γ : Ctxt} {a b c d : Form Γ} → a Ｕ b ≡ c Ｕ d → b ≡ d
+Ｕ-inj₂ {Γ} {a} {b} {c} {d} refl = refl
+
+Ｓ-inj₁ : {Γ : Ctxt} {a b c d : Form Γ} → a Ｓ b ≡ c Ｓ d → a ≡ c
+Ｓ-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+Ｓ-inj₂ : {Γ : Ctxt} {a b c d : Form Γ} → a Ｓ b ≡ c Ｓ d → b ≡ d
+Ｓ-inj₂ {Γ} {a} {b} {c} {d} refl = refl
+
+Ｏ-inj : {Γ : Ctxt} {a b : Form Γ} → Ｏ a ≡ Ｏ b → a ≡ b
+Ｏ-inj {Γ} {a} {b} refl = refl
+
+Ｙ-inj : {Γ : Ctxt} {a b : Form Γ} → Ｙ a ≡ Ｙ b → a ≡ b
+Ｙ-inj {Γ} {a} {b} refl = refl
+
+Ｂ-inj : {Γ : Ctxt} {a b : Form Γ} → Ｂ a ≡ Ｂ b → a ≡ b
+Ｂ-inj {Γ} {a} {b} refl = refl
+
+Ｆ-inj : {Γ : Ctxt} {a b : Form (Γ ، 𝕍ℝ)} → Ｆ a ≡ Ｆ b → a ≡ b
+Ｆ-inj {Γ} {a} {b} refl = refl
+
+¬-inj : {Γ : Ctxt} {a b : Form Γ} → ¬· a ≡ ¬· b → a ≡ b
+¬-inj {Γ} {a} {b} refl = refl
+
+⋆-inj₁ : {Γ : Ctxt} {a b c d : Res Γ} → a ⋆ b ≡ c ⋆ d → a ≡ c
+⋆-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+⋆-inj₂ : {Γ : Ctxt} {a b c d : Res Γ} → a ⋆ b ≡ c ⋆ d → b ≡ d
+⋆-inj₂ {Γ} {a} {b} {c} {d} refl = refl
+
+comp-inj₁ : {Γ : Ctxt} {r₁ r₂ s₁ s₂ : Res Γ} {c₁ c₂ : Comparison} → r₁ ⟨ c₁ ⟩ s₁ ≡ r₂ ⟨ c₂ ⟩ s₂ → r₁ ≡ r₂
+comp-inj₁ {Γ} {r₁} {r₂} {s₁} {s₂} {c₁} {c₂} refl = refl
+
+comp-inj₂ : {Γ : Ctxt} {r₁ r₂ s₁ s₂ : Res Γ} {c₁ c₂ : Comparison} → r₁ ⟨ c₁ ⟩ s₁ ≡ r₂ ⟨ c₂ ⟩ s₂ → c₁ ≡ c₂
+comp-inj₂ {Γ} {r₁} {r₂} {s₁} {s₂} {c₁} {c₂} refl = refl
+
+comp-inj₃ : {Γ : Ctxt} {r₁ r₂ s₁ s₂ : Res Γ} {c₁ c₂ : Comparison} → r₁ ⟨ c₁ ⟩ s₁ ≡ r₂ ⟨ c₂ ⟩ s₂ → s₁ ≡ s₂
+comp-inj₃ {Γ} {r₁} {r₂} {s₁} {s₂} {c₁} {c₂} refl = refl
+
+∈CtxtS-inj : {Γ : Ctxt} {u v : 𝕍} {i j : ∈Ctxt v Γ}
+           → ∈CtxtS u i ≡ ∈CtxtS u j
+           → i ≡ j
+∈CtxtS-inj {Γ} {u} {v} {i} {j} refl = refl
+
+atProp-inj : {Γ : Ctxt} {a b : AtomProp Γ} → atProp a ≡ atProp b → a ≡ b
+atProp-inj {Γ} {a} {b} refl = refl
+
+atomPropV-inj : {Γ : Ctxt} {a b : ∈Ctxt 𝕍Prop Γ} → atomPropV a ≡ atomPropV b → a ≡ b
+atomPropV-inj {Γ} {a} {b} refl = refl
+
+dataV-inj : {Γ : Ctxt} {a b : ∈Ctxt 𝕍Data Γ} → dataV a ≡ dataV b → a ≡ b
+dataV-inj {Γ} {a} {b} refl = refl
+
+agentV-inj : {Γ : Ctxt} {a b : ∈Ctxt 𝕍Agent Γ} → agentV a ≡ agentV b → a ≡ b
+agentV-inj {Γ} {a} {b} refl = refl
+
+agentsV-inj : {Γ : Ctxt} {a b : ∈Ctxt 𝕍Agents Γ} → agentsV a ≡ agentsV b → a ≡ b
+agentsV-inj {Γ} {a} {b} refl = refl
+
+agentsL-inj : {Γ : Ctxt} {a b : List (Agent Γ)} → agentsL a ≡ agentsL b → a ≡ b
+agentsL-inj {Γ} {a} {b} refl = refl
+
+--agentsS-inj : {Γ : Ctxt} {a b : agents} → agentsS {Γ} a ≡ agentsS b → a ≡ b
+--agentsS-inj {Γ} {a} {b} refl = refl
+
+atomPropC-inj : {Γ : Ctxt} {a b : atomProp} → atomPropC {Γ} a ≡ atomPropC b → a ≡ b
+atomPropC-inj {Γ} {a} {b} refl = refl
+
+agentC-inj : {Γ : Ctxt} {a b : agent} → agentC {Γ} a ≡ agentC b → a ≡ b
+agentC-inj {Γ} {a} {b} refl = refl
+
+dataC-inj : {Γ : Ctxt} {a b : 𝔻} → dataC {Γ} a ≡ dataC b → a ≡ b
+dataC-inj {Γ} {a} {b} refl = refl
+
+atAction-inj : {Γ : Ctxt} {a b : Action Γ} → atAction a ≡ atAction b → a ≡ b
+atAction-inj {Γ} {a} {b} refl = refl
+
+atEvent-inj : {Γ : Ctxt} {a b : Event Γ} → atEvent a ≡ atEvent b → a ≡ b
+atEvent-inj {Γ} {a} {b} refl = refl
+
+atCorrect-inj : {Γ : Ctxt} {a b : Fault Γ} → atCorrect a ≡ atCorrect b → a ≡ b
+atCorrect-inj {Γ} {a} {b} refl = refl
+
+ActSend-inj₁ : {Γ : Ctxt} {a b : Data Γ} {c d : Agent Γ} {e f : Agents Γ} → ActSend a c e ≡ ActSend b d f → a ≡ b
+ActSend-inj₁ {Γ} {a} {b} {c} {d} {e} {f} refl = refl
+
+ActSend-inj₂ : {Γ : Ctxt} {a b : Data Γ} {c d : Agent Γ} {e f : Agents Γ} → ActSend a c e ≡ ActSend b d f → c ≡ d
+ActSend-inj₂ {Γ} {a} {b} {c} {d} {e} {f} refl = refl
+
+ActSend-inj₃ : {Γ : Ctxt} {a b : Data Γ} {c d : Agent Γ} {e f : Agents Γ} → ActSend a c e ≡ ActSend b d f → e ≡ f
+ActSend-inj₃ {Γ} {a} {b} {c} {d} {e} {f} refl = refl
+
+EvtReceive-inj₁ : {Γ : Ctxt} {a b : Data Γ} {c d e f : Agent Γ} → EvtReceive a c e ≡ EvtReceive b d f → a ≡ b
+EvtReceive-inj₁ {Γ} {a} {b} {c} {d} {e} {f} refl = refl
+
+EvtReceive-inj₂ : {Γ : Ctxt} {a b : Data Γ} {c d e f : Agent Γ} → EvtReceive a c e ≡ EvtReceive b d f → c ≡ d
+EvtReceive-inj₂ {Γ} {a} {b} {c} {d} {e} {f} refl = refl
+
+EvtReceive-inj₃ : {Γ : Ctxt} {a b : Data Γ} {c d e f : Agent Γ} → EvtReceive a c e ≡ EvtReceive b d f → e ≡ f
+EvtReceive-inj₃ {Γ} {a} {b} {c} {d} {e} {f} refl = refl
+
+EvtInternal-inj₁ : {Γ : Ctxt} {a b : Agent Γ} {c d : Data Γ} → EvtInternal a c ≡ EvtInternal b d → a ≡ b
+EvtInternal-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+EvtInternal-inj₂ : {Γ : Ctxt} {a b : Agent Γ} {c d : Data Γ} → EvtInternal a c ≡ EvtInternal b d → c ≡ d
+EvtInternal-inj₂ {Γ} {a} {b} {c} {d} refl = refl
+
+FaultCorrect-inj₁ : {Γ : Ctxt} {a b c d : Agent Γ} → FaultCorrect a c ≡ FaultCorrect b d → a ≡ b
+FaultCorrect-inj₁ {Γ} {a} {b} {c} {d} refl = refl
+
+FaultCorrect-inj₂ : {Γ : Ctxt} {a b c d : Agent Γ} → FaultCorrect a c ≡ FaultCorrect b d → c ≡ d
+FaultCorrect-inj₂ {Γ} {a} {b} {c} {d} refl = refl
+
+⊆-inj : {Γ Δ : Ctxt} (e : Γ ⊆ Δ) → Set
+⊆-inj {Γ} {Δ} e =
+  (v : 𝕍) (i j : ∈Ctxt v Γ)
+  → e i ≡ e j
+  → i ≡ j
+
+⊆₀-inj : {Γ : Ctxt} {u : 𝕍} → ⊆-inj (⊆₀ {Γ} {u})
+⊆₀-inj {Γ} {u} v i j refl = refl
+
+⊆،-inj : {Γ Δ : Ctxt} (e : Γ ⊆ Δ) (v : 𝕍)
+       → ⊆-inj e
+       → ⊆-inj (⊆، v e)
+⊆،-inj {Γ} {Δ} e v h x (∈Ctxt0 .Γ) (∈Ctxt0 .Γ) q = refl
+⊆،-inj {Γ} {Δ} e v h x (∈CtxtS .v i) (∈CtxtS .v j) q = cong (∈CtxtS v) (h x i j (∈CtxtS-inj q))
+
+∷-inj₁ : {i : Level} {A : Set i}
+         {x y : A}
+         {l k : List A}
+       → x ∷ l ≡ y ∷ k
+       → x ≡ y
+∷-inj₁ {i} {A} {x} {y} {l} {k} refl = refl
+
+∷-inj₂ : {i : Level} {A : Set i}
+         {x y : A}
+         {l k : List A}
+       → x ∷ l ≡ y ∷ k
+       → l ≡ k
+∷-inj₂ {i} {A} {x} {y} {l} {k} refl = refl
+
+-- false if e is not injective
+↑ₚ-inj : {Γ Δ : Ctxt}
+         (e   : Γ ⊆ Δ)
+         (ei  : ⊆-inj e)
+         (a b : AtomProp Γ)
+       → ↑ₚ e a ≡ ↑ₚ e b
+       → a ≡ b
+↑ₚ-inj {Γ} {Δ} e ei (atomPropV i) (atomPropV j) h = cong atomPropV (ei 𝕍Prop i j (atomPropV-inj h))
+↑ₚ-inj {Γ} {Δ} e ei (atomPropC x) (atomPropC y) h = cong atomPropC (atomPropC-inj h)
+
+↑d-inj : {Γ Δ : Ctxt}
+         (e   : Γ ⊆ Δ)
+         (ei  : ⊆-inj e)
+         (a b : Data Γ)
+       → ↑d e a ≡ ↑d e b
+       → a ≡ b
+↑d-inj {Γ} {Δ} e ei (dataV i) (dataV j) h = cong dataV (ei 𝕍Data i j (dataV-inj h))
+↑d-inj {Γ} {Δ} e ei (dataC x) (dataC y) h = cong dataC (dataC-inj h)
+
+↑ᵢ-inj : {Γ Δ : Ctxt}
+         (e   : Γ ⊆ Δ)
+         (ei  : ⊆-inj e)
+         (a b : Agent Γ)
+       → ↑ᵢ e a ≡ ↑ᵢ e b
+       → a ≡ b
+↑ᵢ-inj {Γ} {Δ} e ei (agentV i) (agentV j) h = cong agentV (ei 𝕍Agent i j (agentV-inj h))
+↑ᵢ-inj {Γ} {Δ} e ei (agentC x) (agentC y) h = cong agentC (agentC-inj h)
+
+↑ᵢₛ-inj : {Γ Δ : Ctxt}
+          (e   : Γ ⊆ Δ)
+          (ei  : ⊆-inj e)
+          (a b : List (Agent Γ))
+        → Data.List.map (↑ᵢ e) a ≡ Data.List.map (↑ᵢ e) b
+        → a ≡ b
+↑ᵢₛ-inj {Γ} {Δ} e ei [] [] h = refl
+↑ᵢₛ-inj {Γ} {Δ} e ei (x ∷ a) (y ∷ b) h = cong₂ _∷_ (↑ᵢ-inj e ei x y (∷-inj₁ h)) (↑ᵢₛ-inj e ei a b (∷-inj₂ h))
+
+↑ₛ-inj : {Γ Δ : Ctxt}
+         (e   : Γ ⊆ Δ)
+         (ei  : ⊆-inj e)
+         (a b : Agents Γ)
+       → ↑ₛ e a ≡ ↑ₛ e b
+       → a ≡ b
+↑ₛ-inj {Γ} {Δ} e ei (agentsV i) (agentsV j) h = cong agentsV (ei 𝕍Agents i j (agentsV-inj h))
+↑ₛ-inj {Γ} {Δ} e ei (agentsL x) (agentsL y) h = cong agentsL (↑ᵢₛ-inj e ei x y (agentsL-inj h))
+
+↑ₜ-inj : {Γ Δ : Ctxt}
+         (e   : Γ ⊆ Δ)
+         (ei  : ⊆-inj e)
+         (a b : Action Γ)
+       → ↑ₜ e a ≡ ↑ₜ e b
+       → a ≡ b
+↑ₜ-inj {Γ} {Δ} e ei (ActSend p a A) (ActSend q b B) h =
+  cong₃ ActSend
+        (↑d-inj e ei p q (ActSend-inj₁ h))
+        (↑ᵢ-inj e ei a b (ActSend-inj₂ h))
+        (↑ₛ-inj e ei A B (ActSend-inj₃ h))
+
+↑ₑ-inj : {Γ Δ : Ctxt}
+         (e   : Γ ⊆ Δ)
+         (ei  : ⊆-inj e)
+         (a b : Event Γ)
+       → ↑ₑ e a ≡ ↑ₑ e b
+       → a ≡ b
+↑ₑ-inj {Γ} {Δ} e ei (EvtReceive p a b) (EvtReceive q c d) h =
+  cong₃ EvtReceive
+        (↑d-inj e ei p q (EvtReceive-inj₁ h))
+        (↑ᵢ-inj e ei a c (EvtReceive-inj₂ h))
+        (↑ᵢ-inj e ei b d (EvtReceive-inj₃ h))
+↑ₑ-inj {Γ} {Δ} e ei (EvtInternal a b)  (EvtInternal c d) h =
+  cong₂ EvtInternal
+        (↑ᵢ-inj e ei a c (EvtInternal-inj₁ h))
+        (↑d-inj e ei b d (EvtInternal-inj₂ h))
+
+↑f-inj : {Γ Δ : Ctxt}
+         (e   : Γ ⊆ Δ)
+         (ei  : ⊆-inj e)
+         (a b : Fault Γ)
+       → ↑f e a ≡ ↑f e b
+       → a ≡ b
+↑f-inj {Γ} {Δ} e ei (FaultCorrect a b) (FaultCorrect c d) h =
+  cong₂ FaultCorrect
+        (↑ᵢ-inj e ei a c (FaultCorrect-inj₁ h))
+        (↑ᵢ-inj e ei b d (FaultCorrect-inj₂ h))
+
+↑ₐ-inj : {Γ Δ : Ctxt}
+         (e   : Γ ⊆ Δ)
+         (ei  : ⊆-inj e)
+         (a b : Atom Γ)
+       → ↑ₐ e a ≡ ↑ₐ e b
+       → a ≡ b
+↑ₐ-inj {Γ} {Δ} e ei (atProp x)    (atProp y)    h = cong atProp    (↑ₚ-inj e ei x y (atProp-inj h))
+↑ₐ-inj {Γ} {Δ} e ei (atAction x)  (atAction y)  h = cong atAction  (↑ₜ-inj e ei x y (atAction-inj h))
+↑ₐ-inj {Γ} {Δ} e ei (atEvent x)   (atEvent y)   h = cong atEvent   (↑ₑ-inj e ei x y (atEvent-inj h))
+↑ₐ-inj {Γ} {Δ} e ei (atCorrect x) (atCorrect y) h = cong atCorrect (↑f-inj e ei x y (atCorrect-inj h))
+
+↑A-inj : {Γ Δ : Ctxt}
+         (e   : Γ ⊆ Δ)
+         (ei  : ⊆-inj e)
+         (a b : SetAtom Γ)
+       → ↑A e a ≡ ↑A e b
+       → a ≡ b
+↑A-inj {Γ} {Δ} e ei (x ∈ₐ x₁) (y ∈ₐ y₁) h = cong₂ _∈ₐ_ (↑ᵢ-inj e ei x y (∈ₐ-inj₁ h)) (↑ₛ-inj e ei x₁ y₁ (∈ₐ-inj₂ h))
+↑A-inj {Γ} {Δ} e ei (∣ x ∣ₛ＝ n) (∣ y ∣ₛ＝ m) h = cong₂ ∣_∣ₛ＝_ (↑ₛ-inj e ei x y (∣∣ₛ-inj₁ h)) (∣∣ₛ-inj₂ h)
+
+↑ᵣ-inj : {Γ Δ : Ctxt}
+         (e   : Γ ⊆ Δ)
+         (ei  : ⊆-inj e)
+         (a b : Res Γ)
+       → ↑ᵣ e a ≡ ↑ᵣ e b
+       → a ≡ b
+↑ᵣ-inj {Γ} {Δ} e ei (𝐯 i) (𝐯 j) h = cong 𝐯 (ei 𝕍World i j (𝐯-inj h))
+↑ᵣ-inj {Γ} {Δ} e ei 𝟎 𝟎 h = refl
+↑ᵣ-inj {Γ} {Δ} e ei (a ⋆ a₁) (b ⋆ b₁) h = cong₂ _⋆_ (↑ᵣ-inj e ei a b (⋆-inj₁ h)) (↑ᵣ-inj e ei a₁ b₁ (⋆-inj₂ h))
+↑ᵣ-inj {Γ} {Δ} e ei (rvar a) (rvar b) h = cong rvar (rvar-inj h)
+
+↑-inj : {Γ Δ : Ctxt}
+        (e   : Γ ⊆ Δ)
+        (ei  : ⊆-inj e)
+        (f g : Form Γ)
+      → ↑ e f ≡ ↑ e g
+      → f ≡ g
+↑-inj {Γ} {Δ} e ei (𝕒 x) (𝕒 x₁) h = cong 𝕒 (↑ₐ-inj e ei x x₁ (𝕒-inj h))
+↑-inj {Γ} {Δ} e ei (var x) (var x₁) h = cong var (var-inj h)
+↑-inj {Γ} {Δ} e ei ⊤· ⊤· h = refl
+↑-inj {Γ} {Δ} e ei ⊥· ⊥· h = refl
+↑-inj {Γ} {Δ} e ei (f ∧· f₁) (g ∧· g₁) h = cong₂ _∧·_ (↑-inj e ei f g (∧-inj₁ h)) (↑-inj e ei f₁ g₁ (∧-inj₂ h))
+↑-inj {Γ} {Δ} e ei (f ∨· f₁) (g ∨· g₁) h = cong₂ _∨·_ (↑-inj e ei f g (∨-inj₁ h)) (↑-inj e ei f₁ g₁ (∨-inj₂ h))
+↑-inj {Γ} {Δ} e ei (f →· f₁) (g →· g₁) h = cong₂ _→·_ (↑-inj e ei f g (→-inj₁ h)) (↑-inj e ei f₁ g₁ (→-inj₂ h))
+↑-inj {Γ} {Δ} e ei (∀· u f) (∀· w g) h
+  with ∀-inj₁ h
+... | refl = cong (∀· u) (↑-inj (⊆، (𝕍𝕌 u) e) (⊆،-inj e (𝕍𝕌 u) ei) f g (∀-inj₂ h))
+↑-inj {Γ} {Δ} e ei (∃· u f) (∃· w g) h
+  with ∃-inj₁ h
+... | refl = cong (∃· u) (↑-inj (⊆، (𝕍𝕌 u) e) (⊆،-inj e (𝕍𝕌 u) ei) f g (∃-inj₂ h))
+↑-inj {Γ} {Δ} e ei (𝔸 x) (𝔸 y) h = cong 𝔸 (↑A-inj e ei x y (𝔸-inj h))
+↑-inj {Γ} {Δ} e ei (f Ｕ f₁) (g Ｕ g₁) h = cong₂ _Ｕ_ (↑-inj e ei f g (Ｕ-inj₁ h)) (↑-inj e ei f₁ g₁ (Ｕ-inj₂ h))
+↑-inj {Γ} {Δ} e ei (Ｏ f) (Ｏ g) h = cong Ｏ (↑-inj e ei f g (Ｏ-inj h))
+↑-inj {Γ} {Δ} e ei (f Ｓ f₁) (g Ｓ g₁) h = cong₂ _Ｓ_ (↑-inj e ei f g (Ｓ-inj₁ h)) (↑-inj e ei f₁ g₁ (Ｓ-inj₂ h))
+↑-inj {Γ} {Δ} e ei (Ｙ f) (Ｙ g) h = cong Ｙ (↑-inj e ei f g (Ｙ-inj h))
+↑-inj {Γ} {Δ} e ei (Ｂ f) (Ｂ g) h = cong Ｂ (↑-inj e ei f g (Ｂ-inj h))
+↑-inj {Γ} {Δ} e ei (Ｆ f) (Ｆ g) h = cong Ｆ_ (↑-inj (⊆، 𝕍ℝ e) (⊆،-inj e 𝕍ℝ ei) f g (Ｆ-inj h))
+↑-inj {Γ} {Δ} e ei (t₁ ⟨ x ⟩ t₂) (u₁ ⟨ y ⟩ u₂) h =
+  cong₃ _⟨_⟩_
+        (↑ᵣ-inj e ei t₁ u₁ (comp-inj₁ h))
+        (comp-inj₂ h)
+        (↑ᵣ-inj e ei t₂ u₂ (comp-inj₃ h))
 
 \end{code}
