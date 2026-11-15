@@ -31,9 +31,9 @@ open import Decidable(W)
 open import Syntax(𝔻)(W)
 open import Subst(𝔻)(W) using (𝕣₀ ; ◇↓)
 open import Semantics(𝔻)(W)
-open import Automation W
-open import Plug W
-open import ProveTactic W
+open import Automation(W)
+open import Plug(W)
+open import ProveTactic(W)
 open import RulesTemp(𝔻)(W) using (rule◇↓R ; rule◇R ; ruleＯR)
 
 \end{code}

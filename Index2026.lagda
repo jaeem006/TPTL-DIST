@@ -70,4 +70,12 @@ Section5-3-◇↓R-subst : (M : Model₀) (Γ : ℂ₀) (t r r₁ : ℂRes Γ) (
                      → sat-rule M (rule◇↓R Γ t r r₁ A)
 Section5-3-◇↓R-subst = ◇↓R-subst
 
+Section5-4-◇↓R-refl : (M : Model₀) (Γ : ℂ₀) (t r r₁ : ℂRes Γ) (A : ℂForm Γ)
+                    → sat-rule M (rule◇↓R Γ t r r₁ A)
+Section5-4-◇↓R-refl = ◇↓R-refl
+
+Section5-4-→-refl : (M : Model₀) (A B C : Form₀) (t : ℂRes ℂ⟨⟩)
+                  → sat-sequent M (seq ℂ⟨⟩ (CEr t) ((A →· B) →· (B →· C) →· A →· C))
+Section5-4-→-refl = →-refl
+
 \end{code}
