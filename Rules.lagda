@@ -591,8 +591,8 @@ relay-sub {Γ} a b c p =
         (sub-Agent-↑ᵢ،＋ Γ ⟨⟩ 𝕍Data p b)
         (sub-Agent-↑ᵢ،＋ Γ ⟨⟩ 𝕍Data p c)
 
-example1 : (Γ : ℂ₀) (a b c : ℂAgent Γ) (Δ r : ℂRes Γ) (p : ℂData Γ) → Rule
-example1 Γ a b c Δ r p =
+forwarding : (Γ : ℂ₀) (a b c : ℂAgent Γ) (Δ r : ℂRes Γ) (p : ℂData Γ) → Rule
+forwarding Γ a b c Δ r p =
   rule (rseq Γ r (synchrony-assumption Δ)
         ∷ rseq Γ r (relay a b c)
         -- 'a' sends 'p' to 'b' at time 'r'
@@ -601,10 +601,10 @@ example1 Γ a b c Δ r p =
        -- 'c' receives 'p' from 'b' by 'Δ ⋆ Δ'
        (rseq Γ r (◇↓ (Δ ⋆ Δ) recv[ c ⇐ p ⇐ b ]))
 
-example1-true : (M : Model₀)
+forwarding-true : (M : Model₀)
                 {Γ : ℂ₀} (a b c : ℂAgent Γ) (Δ r : ℂRes Γ) (p : ℂData Γ)
-              → sat-rule M (example1 Γ a b c Δ r p)
-example1-true M {Γ} a b c Δ r p (hyp1 , hyp2 , hyp3 , _) = concl
+              → sat-rule M (forwarding Γ a b c Δ r p)
+forwarding-true M {Γ} a b c Δ r p (hyp1 , hyp2 , hyp3 , _) = concl
   where
   a𝟙𝟙 : sat-sequent M (rseq (ℂe Γ (□ (send[ a ⇒ p ⇒ [ b ]ₐ ] →· ◇↓ Δ recv[ b ⇐ p ⇐ a ])) r) r (◇↓ Δ recv[ b ⇐ p ⇐ a ]))
   a𝟙𝟙 = rule□L-now-sat M Γ r r (send[ a ⇒ p ⇒ [ b ]ₐ ] →· ◇↓ Δ recv[ b ⇐ p ⇐ a ]) (◇↓ Δ recv[ b ⇐ p ⇐ a ])
@@ -744,7 +744,7 @@ example1-true M {Γ} a b c Δ r p (hyp1 , hyp2 , hyp3 , _) = concl
          → m ⊨ relay a b c
          → m ⊨ ↑[ p , a ⇒ [ b ]ₐ ]        -- at t
          → m ⊨ ◇↓ (Δ ⋆ Δ) ↓[ p , b ⇒ c ]  -- by t + 2Δ
-example1 {Γ} m a b c Δ p ⊨s ⊨r ⊨p = 𝕀𝕍
+forwarding {Γ} m a b c Δ p ⊨s ⊨r ⊨p = 𝕀𝕍
 --}
 
 \end{code}
@@ -1037,12 +1037,12 @@ change-model {m₁} {m₂} F refl h = h
 ⟦[]ₛ⟧ₛ : {Γ : Ctxt} (m : Model Γ) (a : Agent Γ) → (⟦ [ a ]ₐ ⟧ₛ· m) (⟦ a ⟧ᵢ· m)
 ⟦[]ₛ⟧ₛ {Γ} m a = here refl
 
-example1 : {Γ : Ctxt} (m : Model Γ) (a b c : Agent Γ) (Δ : Res Γ) (p : AtomProp Γ)
+forwarding : {Γ : Ctxt} (m : Model Γ) (a b c : Agent Γ) (Δ : Res Γ) (p : AtomProp Γ)
          → m ⊨ synchrony-assumption Δ
          → m ⊨ relay a b c
          → m ⊨ ↑[ p , a ⇒ [ b ]ₐ ]        -- at t
          → m ⊨ ◇↓ (Δ ⋆ Δ) ↓[ p , b ⇒ c ]  -- by t + 2Δ
-example1 {Γ} m a b c Δ p ⊨s ⊨r ⊨p = 𝕀𝕍
+forwarding {Γ} m a b c Δ p ⊨s ⊨r ⊨p = 𝕀𝕍
   where
   𝕀 : m ⊨ ◇↓ Δ ↓[ p , a ⇒ b ]
   𝕀 = use-synchrony m a b [ b ]ₐ Δ p (⟦[]ₛ⟧ₛ m b) ⊨s ⊨p

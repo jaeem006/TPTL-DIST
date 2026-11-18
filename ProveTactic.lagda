@@ -15,7 +15,10 @@ steps of the method (Examples.lagda shows the same steps done by hand):
   2. SEARCH.  It runs search⊢ n on the closed sequent Δ ⊢ D′ at T′ by
      normalisation.
   3. INSTANTIATE.  It plugs the derivation found into Γ₀ with plug-⊢
-     (Plug.lagda), which puts the unknowns back.  For sat-sequent and
+     (Plug.lagda), which puts the unknowns back.  The derivation is passed
+     as  from-just (search⊢ n Δ T′ D′), as in the hand-written proofs, and
+     not as its quoted normal form, which Agda would have to type-check
+     again rule by rule.  For sat-sequent and
      sat-rule goals it then applies `sound`, and for sat-rule turns the
      hypotheses coming from ps back into premises with hyps→rule.
 
@@ -29,9 +32,10 @@ supported.
 open import Level using (0ℓ) renaming (suc to lsuc)
 open import Data.Bool using (Bool ; true ; false ; if_then_else_ ; _∨_ ; _∧_)
 open import Data.Nat using (ℕ ; zero ; suc ; _+_ ; _∸_ ; _⊔_ ; _<ᵇ_)
-open import Data.List using (List ; _∷_ ; [] ; length ; _++_ ; reverse)
+open import Data.List using (List ; _∷_ ; [] ; length ; _++_ ; reverse ; map)
 open import Data.Product using (Σ ; _×_ ; _,_ ; proj₁ ; proj₂)
-open import Data.Maybe using (Maybe ; just ; nothing)
+open import Data.Maybe using (Maybe ; just ; nothing ; from-just ; is-just)
+open import Agda.Builtin.Equality using (_≡_ ; refl)
 open import Data.Unit using (⊤ ; tt)
 open import Agda.Builtin.Char using (Char ; primCharEquality)
 open import Agda.Builtin.String using (primStringToList)
@@ -54,8 +58,8 @@ open import Decidable(W)
 open import Syntax(𝔻)(W)
 open import Semantics(𝔻)(W)
 open import Subst(𝔻)(W) using (𝕣₀)
-open import Automation(W)
-open import Plug(W)
+open import Automation W
+open import Plug W
 
 private
   _>>=_ : {A B : Set} → TC A → (A → TC B) → TC B
@@ -138,6 +142,15 @@ private
   maxLit (arg _ (R.lit (R.nat k)) ∷ args) = suc k ⊔ maxLit args
   maxLit (_ ∷ args)                       = maxLit args
 
+  freshLit     : Name → Term → ℕ
+  freshLitArgs : Name → List (Arg Term) → ℕ
+  freshLit nm (R.con c args) = (if c ≈ nm then maxLit args else 0) ⊔ freshLitArgs nm args
+  freshLit nm (R.def f args) = freshLitArgs nm args
+  freshLit nm (R.var x args) = freshLitArgs nm args
+  freshLit nm _              = 0
+  freshLitArgs nm []               = 0
+  freshLitArgs nm (arg _ t ∷ args) = freshLit nm t ⊔ freshLitArgs nm args
+
   freshVar     : Term → ℕ
   freshVarArgs : List (Arg Term) → ℕ
   freshVar (R.con c args) = (if c ≈ varName then maxLit args else 0) ⊔ freshVarArgs args
@@ -182,7 +195,16 @@ private
   -- search fail, the macro reports an error.
 
   St : Set
-  St = Atoms × Atoms   -- opaque formulas, opaque resources
+  St = Atoms × Atoms × Atoms × Atoms   -- opaque formulas, resources, agents, data
+
+  -- dp: also abstract opaque agents and data (to placeholder constants
+  -- agentC / dataC numbered from bA / bD); bF: first variable number.
+  record Cfg : Set where
+    constructor cfg
+    field
+      dp : Bool
+      bF bA bD : ℕ
+  open Cfg
 
   unk : Arg Term → Arg Term
   unk (arg i@(R.arg-info R.visible _) t) = arg i t
@@ -192,24 +214,41 @@ private
   mkRVar k = R.con (quote S.rvar) (arg (R.arg-info R.hidden (R.modality R.relevant R.quantity-ω)) R.unknown
                                    ∷ arg (R.arg-info R.visible (R.modality R.relevant R.quantity-ω)) (R.lit (R.nat k)) ∷ [])
 
-  atomF : ℕ → St → Term → St × Term
-  atomF b (fs , rs) t with index t fs
-  ... | just i  = (fs , rs) , mkVar (b + i)
-  ... | nothing = (fs ++ (t ∷ []) , rs) , mkVar (b + length fs)
+  mkCon1 : Name → ℕ → Term
+  mkCon1 c k = R.con c (arg (R.arg-info R.hidden (R.modality R.relevant R.quantity-ω)) R.unknown
+                        ∷ arg (R.arg-info R.visible (R.modality R.relevant R.quantity-ω)) (R.lit (R.nat k)) ∷ [])
 
-  atomR : ℕ → St → Term → St × Term
-  atomR b (fs , rs) t with index t rs
-  ... | just i  = (fs , rs) , mkRVar (b + i)
-  ... | nothing = (fs , rs ++ (t ∷ [])) , mkRVar (b + length rs)
+  atomF : Cfg → St → Term → St × Term
+  atomF c (fs , rs , as , ds) t with index t fs
+  ... | just i  = (fs , rs , as , ds) , mkVar (bF c + i)
+  ... | nothing = (fs ++ (t ∷ []) , rs , as , ds) , mkVar (bF c + length fs)
+
+  atomR : Cfg → St → Term → St × Term
+  atomR c (fs , rs , as , ds) t with index t rs
+  ... | just i  = (fs , rs , as , ds) , mkRVar (bF c + i)
+  ... | nothing = (fs , rs ++ (t ∷ []) , as , ds) , mkRVar (bF c + length rs)
+
+  atomA : Cfg → St → Term → St × Term
+  atomA c (fs , rs , as , ds) t with index t as
+  ... | just i  = (fs , rs , as , ds) , mkCon1 (quote S.agentC) (bA c + i)
+  ... | nothing = (fs , rs , as ++ (t ∷ []) , ds) , mkCon1 (quote S.agentC) (bA c + length as)
+
+  atomD : Cfg → St → Term → St × Term
+  atomD c (fs , rs , as , ds) t with index t ds
+  ... | just i  = (fs , rs , as , ds) , mkCon1 (quote S.dataC) (bD c + i)
+  ... | nothing = (fs , rs , as , ds ++ (t ∷ [])) , mkCon1 (quote S.dataC) (bD c + length ds)
 
   data Kind : Set where
-    kF kR kN kO : Kind
+    kF kR kN kO kA kAs kD : Kind
 
   cls : Term → Kind
   cls (R.def f _) =
     if f ≈ quote S.Form then kF
     else if f ≈ quote S.Res then kR
     else if (f ≈ quote Sem.CE) ∨ (f ≈ quote Sem.Interval) then kN
+    else if f ≈ quote S.Agent then kA
+    else if f ≈ quote S.Agents then kAs
+    else if f ≈ quote S.Data then kD
     else kO
   cls _ = kO
 
@@ -223,11 +262,37 @@ private
   ret : {A : Set} → A → TC A
   ret = R.returnTC
 
-  anyFR : List Kind → Bool
-  anyFR []        = false
-  anyFR (kF ∷ ks) = true
-  anyFR (kR ∷ ks) = true
-  anyFR (_  ∷ ks) = anyFR ks
+  anyFR : Cfg → List Kind → Bool
+  anyFR c []         = false
+  anyFR c (kF ∷ ks)  = true
+  anyFR c (kR ∷ ks)  = true
+  anyFR c (kA ∷ ks)  = dp c ∨ anyFR c ks
+  anyFR c (kAs ∷ ks) = dp c ∨ anyFR c ks
+  anyFR c (kD ∷ ks)  = dp c ∨ anyFR c ks
+  anyFR c (_  ∷ ks)  = anyFR c ks
+
+  -- With dp, a hidden argument is kept when its type is a defined type other
+  -- than Ctxt, e.g. the module parameter EM of a constructor copied by a
+  -- module application (Rules._._⋆_), which nothing else determines.
+  -- Object-level contexts (and sorts, e.g. the type of a list) are
+  -- re-elaborated, as without dp.
+  keepHidden : Term → TC Bool
+  keepHidden t = R.runSpeculative
+    (R.catchTC (R.inferType t >>= λ ty → R.normalise ty >>= λ ty →
+                R.returnTC (isDefNotCtxt ty , false))
+               (R.returnTC (false , false)))
+    where
+    isDefNotCtxt : Term → Bool
+    isKO : Kind → Bool
+    isKO kO = true
+    isKO _  = false
+    isDefNotCtxt ty@(R.def f _) = if f ≈ quote S.Ctxt then false else isKO (cls ty)
+    isDefNotCtxt _           = false
+
+  unkM : Cfg → Arg Term → TC (Arg Term)
+  unkM c a@(arg (R.arg-info R.visible _) _) = ret a
+  unkM c a@(arg i t) =
+    if dp c then (keepHidden t >>= λ k → ret (if k then a else unk a)) else ret (unk a)
 
   kinds : List (Arg Term) → TC (List Kind)
   kinds []                 = ret []
@@ -238,25 +303,58 @@ private
               else if (f ≈ quote Sb.↑₁) ∨ (f ≈ quote Sb.↑ᵣ₁) then 2 else 0
 
   -- depth 0
-  absF0  : ℕ → St → Term → TC (St × Term)
-  absR0  : ℕ → St → Term → TC (St × Term)
-  absN0  : ℕ → St → Term → TC (St × Term)
-  absK0  : ℕ → Kind → St → Term → TC (St × Term)
-  absVis : ℕ → St → List (Arg Term) → TC (St × List (Arg Term))
+  absF0  : Cfg → St → Term → TC (St × Term)
+  absR0  : Cfg → St → Term → TC (St × Term)
+  absN0  : Cfg → St → Term → TC (St × Term)
+  absK0  : Cfg → Kind → St → Term → TC (St × Term)
+  absVis : Cfg → St → List (Arg Term) → TC (St × List (Arg Term))
+  absA0 : Cfg → St → Term → TC (St × Term)
+  absD0 : Cfg → St → Term → TC (St × Term)
+  absLA : ℕ → Cfg → St → Term → TC (St × Term)
+  absAs0 : Cfg → St → Term → TC (St × Term)
   -- under d object-level binders
-  absU   : ℕ → ℕ → St → Term → TC (St × Term)
-  absUR  : ℕ → ℕ → St → Term → TC (St × Term)
-  absUVis : ℕ → ℕ → St → List (Arg Term) → TC (St × List (Arg Term))
-  absUK  : ℕ → ℕ → Kind → St → Term → TC (St × Term)
+  absU   : Cfg → ℕ → St → Term → TC (St × Term)
+  absUR  : Cfg → ℕ → St → Term → TC (St × Term)
+  absUVis : Cfg → ℕ → St → List (Arg Term) → TC (St × List (Arg Term))
+  absUK  : Cfg → ℕ → Kind → St → Term → TC (St × Term)
 
   absK0 b kF st t = absF0 b st t
   absK0 b kR st t = absR0 b st t
   absK0 b kN st t = absN0 b st t
   absK0 b kO st t = ret (st , t)
+  absK0 b kA st t = if dp b then absA0 b st t else ret (st , t)
+  absK0 b kD st t = if dp b then absD0 b st t else ret (st , t)
+  absK0 b kAs st t = if dp b then absAs0 b st t else ret (st , t)
+
+  -- opaque agents and data (only at depth 0)
+  absA0 b st t@(R.con k _) = if k ≈ quote S.agentC then ret (st , t) else ret (atomA b st t)
+  absA0 b st t = ret (atomA b st t)
+
+  absD0 b st t@(R.con k _) = if k ≈ quote S.dataC then ret (st , t) else ret (atomD b st t)
+  absD0 b st t = ret (atomD b st t)
+
+  -- a list of agents, given by _∷_ and []
+  absLA zero    b st t = ret (st , t)
+  absLA (suc n) b st t@(R.con k args) with lastVis args
+  ... | (xs ∷ x ∷ _) =
+    if k ≈ quote Data.List.List._∷_
+      then (absA0 b st x >>= λ { (st₁ , x′) → absLA n b st₁ xs >>= λ { (st₂ , xs′) →
+            ret (st₂ , R.con k (hArg R.unknown ∷ hArg R.unknown ∷ vArg x′ ∷ vArg xs′ ∷ [])) } })
+      else ret (st , t)
+  ... | _ = ret (st , R.con k (map unk args))
+  absLA (suc n) b st t = ret (st , t)
+
+  absAs0 b st t@(R.con k args) with lastVis args
+  ... | (l ∷ _) = if k ≈ quote S.agentsL
+                    then (absLA 1000 b st l >>= λ { (st′ , l′) → ret (st′ , R.con k (hArg R.unknown ∷ vArg l′ ∷ [])) })
+                    else ret (st , t)
+  ... | _ = ret (st , t)
+  absAs0 b st t@(R.def f args) = absVis b st args >>= λ { (st′ , args′) → ret (st′ , R.def f args′) }
+  absAs0 b st t = ret (st , t)
 
   absVis b st [] = ret (st , [])
   absVis b st (a@(arg i t) ∷ args) with isVis a
-  ... | false = absVis b st args >>= λ { (st′ , args′) → ret (st′ , unk a ∷ args′) }
+  ... | false = unkM b a >>= λ a′ → absVis b st args >>= λ { (st′ , args′) → ret (st′ , a′ ∷ args′) }
   ... | true  = kindOf t >>= λ k → absK0 b k st t >>= λ { (st₁ , t′) →
                 absVis b st₁ args >>= λ { (st₂ , args′) → ret (st₂ , arg i t′ ∷ args′) } }
 
@@ -271,7 +369,7 @@ private
     else absVis b st args >>= (λ { (st′ , args′) → ret (st′ , R.con c args′) })
   absF0 b st t@(R.def f args) =
     kinds args >>= λ ks →
-    if anyFR ks
+    if anyFR b ks
       then absVis b st args >>= (λ { (st′ , args′) → ret (st′ , R.def f args′) })
       else ret (atomF b st t)
   absF0 b st t = ret (atomF b st t)
@@ -283,7 +381,7 @@ private
 
   absUVis b d st [] = ret (st , [])
   absUVis b d st (a@(arg i t) ∷ args) with isVis a
-  ... | false = absUVis b d st args >>= λ { (st′ , args′) → ret (st′ , unk a ∷ args′) }
+  ... | false = unkM b a >>= λ a′ → absUVis b d st args >>= λ { (st′ , args′) → ret (st′ , a′ ∷ args′) }
   ... | true  = kindOf t >>= λ k → absUK b d k st t >>= λ { (st₁ , t′) →
                 absUVis b d st₁ args >>= λ { (st₂ , args′) → ret (st₂ , arg i t′ ∷ args′) } }
 
@@ -291,7 +389,7 @@ private
   absUK b d kR st t = absUR b d st t
   absUK b d kN st (R.con c as) = absUVis b d st as >>= λ { (st′ , as′) → ret (st′ , R.con c as′) }
   absUK b d kN st t = ret (st , t)
-  absUK b d kO st t = ret (st , t)
+  absUK b d _  st t = ret (st , t)
 
   absU b d st t@(R.con c args) =
     if (c ≈ quote S.Ｆ_) ∨ (c ≈ quote S.∀·) ∨ (c ≈ quote S.∃·)
@@ -325,6 +423,106 @@ private
   mkρ b i []       = R.con (quote P.●ᵣ) []
   mkρ b i (t ∷ ts) = R.con (quote P._↦ᵣ_⨾_) (vArg (R.lit (R.nat (b + i))) ∷ vArg t ∷ vArg (mkρ b (suc i) ts) ∷ [])
 
+  -- ---------------------------------------------------------------------------
+  -- Shapes (see Plug.lagda): nested weakenings  ↑ e₂ (↑ e₁ X)  of an opaque
+  -- X, found in the normal forms of the formulas, innermost segment first.
+
+  data Tag : Set where
+    tR tA tD : Tag
+
+  eqTag : Tag → Tag → Bool
+  eqTag tR tR = true
+  eqTag tA tA = true
+  eqTag tD tD = true
+  eqTag _  _  = false
+
+  ShE : Set
+  ShE = Tag × Term × List ℕ
+
+  upTag : Name → Maybe Tag
+  upTag f = if f ≈ quote Sb.↑ᵣ then just tR
+            else if f ≈ quote Sb.↑ᵢ then just tA
+            else if f ≈ quote Sb.↑d then just tD
+            else nothing
+
+  -- number of ∈CtxtS steps of a weakening  Γ ⊆ Γ ، u₁ … ، uₙ
+  cntS : ℕ → Term → Maybe ℕ
+  cntS zero    t = nothing
+  cntS (suc n) (R.var _ []) = just 0
+  cntS (suc n) (R.con c args) with lastVis args
+  ... | (i ∷ _) = if c ≈ quote S.∈CtxtS then sucM (cntS n i) else nothing
+    where sucM : Maybe ℕ → Maybe ℕ
+          sucM (just k) = just (suc k)
+          sucM nothing  = nothing
+  ... | _ = nothing
+  cntS (suc n) t = nothing
+
+  lenSub : Term → Maybe ℕ
+  lenSub (R.lam _ (R.abs _ t)) = lenSub t
+  lenSub (R.def f _) =
+    if f ≈ quote Sb.⊆₀ then just 1 else if f ≈ quote Sb.⊆₁ then just 2
+    else if f ≈ quote Sb.⊆₂ then just 3 else if f ≈ quote Sb.⊆₃ then just 4
+    else if f ≈ quote Sb.⊆₄ then just 5 else nothing
+  lenSub t = cntS 1000 t
+
+  chain : ℕ → Tag → Term → Term × List ℕ × Bool
+  chain zero    tg t = t , [] , false
+  chain (suc n) tg t@(R.def f args) with upTag f | lastVis args
+  ... | just tg′ | (X ∷ e ∷ _) = if eqTag tg tg′ then add (lenSub e) (chain n tg X) else (t , [] , true)
+    where add : Maybe ℕ → Term × List ℕ × Bool → Term × List ℕ × Bool
+          add (just k) (x , ss , ok) = x , ss ++ (k ∷ []) , ok
+          add nothing  (x , ss , ok) = x , ss , false
+  ... | _ | _ = t , [] , true
+  chain (suc n) tg t = t , [] , true
+
+  scan     : Term → List ShE
+  scanArgs : List (Arg Term) → List ShE
+  scan t@(R.def f args) with upTag f
+  ... | just tg = entry tg (chain 1000 tg t)
+    where entry : Tag → Term × List ℕ × Bool → List ShE
+          entry tg (x , ss@(_ ∷ _ ∷ _) , true) = (tg , x , ss) ∷ []
+          entry tg _ = []
+  ... | nothing = scanArgs args
+  scan (R.con c args) = scanArgs args
+  scan (R.var x args) = scanArgs args
+  scan _ = []
+  scanArgs [] = []
+  scanArgs (arg (R.arg-info R.visible _) t ∷ as) = scan t ++ scanArgs as
+  scanArgs (_ ∷ as) = scanArgs as
+
+  shapesOf : Tag → Term → List ShE → List (List ℕ)
+  shapesOf tg x [] = []
+  shapesOf tg x ((tg′ , y , ss) ∷ es) =
+    if eqTag tg tg′ ∧ eqT x y then ss ∷ shapesOf tg x es else shapesOf tg x es
+
+  natT : ℕ → Term
+  natT k = R.lit (R.nat k)
+
+  mkShapes : List (List ℕ) → Term
+  mkShapes sss = mkList (map (λ ss → mkList (map natT ss)) sss)
+
+  isNil : {A : Set} → List A → Bool
+  isNil [] = true
+  isNil _  = false
+
+  mkρs : List ShE → ℕ → ℕ → List Term → Term
+  mkρs sh b i []       = R.con (quote P.●ᵣ) []
+  mkρs sh b i (t ∷ ts) =
+    if isNil (shapesOf tR t sh)
+      then R.con (quote P._↦ᵣ_⨾_) (vArg (natT (b + i)) ∷ vArg t ∷ vArg (mkρs sh b (suc i) ts) ∷ [])
+      else R.con (quote P._↦ᵣ_∶_⨾_) (vArg (natT (b + i)) ∷ vArg t ∷ vArg (mkShapes (shapesOf tR t sh))
+                                     ∷ vArg (mkρs sh b (suc i) ts) ∷ [])
+
+  mkα : List ShE → ℕ → ℕ → List Term → Term
+  mkα sh b i []       = R.con (quote P.●ₐ) []
+  mkα sh b i (t ∷ ts) = R.con (quote P._↦ₐ_∶_⨾_) (vArg (natT (b + i)) ∷ vArg t ∷ vArg (mkShapes (shapesOf tA t sh))
+                                                 ∷ vArg (mkα sh b (suc i) ts) ∷ [])
+
+  mkδ : List ShE → ℕ → ℕ → List Term → Term
+  mkδ sh b i []       = R.con (quote P.●d) []
+  mkδ sh b i (t ∷ ts) = R.con (quote P._↦d_∶_⨾_) (vArg (natT (b + i)) ∷ vArg t ∷ vArg (mkShapes (shapesOf tD t sh))
+                                                 ∷ vArg (mkδ sh b (suc i) ts) ∷ [])
+
   -- the premises of a rule, as (Γ , T , C) triples
   conArgs : Term → List (Arg Term)
   conArgs (R.con _ args) = args
@@ -352,7 +550,7 @@ private
     parts (C ∷ T ∷ Γ ∷ _) = ret (Γ , T , C)
     parts _ = R.typeError (R.strErr "prove: expected seq Γ T C, got" ∷ R.termErr t ∷ [])
 
-  absPrems : ℕ → St → List Term → TC (St × List Term × List Term)
+  absPrems : Cfg → St → List Term → TC (St × List Term × List Term)
   absPrems b st [] = ret (st , [] , [])
   absPrems b st (p ∷ ps) =
     seqParts p >>= λ { (Γ , T , C) →
@@ -375,7 +573,7 @@ private
   -- hypotheses on top of it, innermost first.
   peelCtx : ℕ → Term → TC (Term × List Term)
   -- R.reduce would elaborate the term and leave unsolvable metas for its
-  -- omitted module parameters, so ℂe / ℂu are unfolded by hand.
+  -- omitted module parameters, so ℂe / ℂu / ℂi are unfolded by hand.
   peelCtx zero    Γ = ret (Γ , [])
   peelCtx (suc k) Γ@(R.con c args) with lastVis args
   ... | (a ∷ f ∷ c′ ∷ _) = if c ≈ quote Sem.ℂx then push c′ a f else ret (Γ , [])
@@ -383,11 +581,13 @@ private
           push c′ a f = peelCtx k c′ >>= λ { (base , hs) → ret (base , hs ++ (mkPair a f ∷ [])) }
   ... | _ = ret (Γ , [])
   -- (the module parameters 𝔻 and W come first, so lastVis lists the
-  -- visible arguments as  r f c …  for ℂe c f r  and  f c …  for ℂu c f)
+  -- visible arguments as  r f c …  for ℂe c f r,  i f c …  for ℂi c f i
+  -- and  f c …  for ℂu c f)
   peelCtx (suc k) Γ@(R.def g args) with lastVis args
   ... | (x ∷ y ∷ z ∷ _) =
     if g ≈ quote Sem.ℂe then push z (R.con (quote Sem.CEr) (vArg x ∷ [])) y
     else if g ≈ quote Sem.ℂu then push y (R.con (quote Sem.CEu) []) x
+    else if g ≈ quote Sem.ℂi then push z (R.con (quote Sem.CEi) (vArg x ∷ [])) y
     else ret (Γ , [])
     where push : Term → Term → Term → TC (Term × List Term)
           push c′ a f = peelCtx k c′ >>= λ { (base , hs) → ret (base , hs ++ (mkPair a f ∷ [])) }
@@ -400,7 +600,7 @@ private
   ... | _           = R.unknown , R.unknown
   pairParts t = R.unknown , R.unknown
 
-  absPairs : ℕ → St → List Term → TC (St × List Term)
+  absPairs : Cfg → St → List Term → TC (St × List Term)
   absPairs b st [] = ret (st , [])
   absPairs b st (p ∷ ps) with pairParts p
   ... | (T , C) =
@@ -415,40 +615,126 @@ private
   --     of type ⊢ (seq (addHyps Γ prems) T D) up to computation, where Γ₀ is
   --     Γ without its concrete hypotheses, and
   --   * the premises as (T , C) pairs, for hyps→rule.
-  proveCore : ℕ → Term → Term → Term → Term → List Term → TC (Term × List Term)
-  proveCore n goal Γ T D prems = do
+  -- Constructors copied by a module application (e.g. Rules._._⋆_, from an
+  -- `open import Syntax ...` inside a parameterised module) carry that
+  -- module's parameters as hidden arguments, which reflection gives as
+  -- unknown.  In the abstract sequent nothing determines them, so (with dp)
+  -- such constructors are replaced by the original ones.
+  canonTable : List Name
+  canonTable =
+    quote S.Res._⋆_ ∷ quote S.rvar ∷ quote S.𝟎 ∷ quote S.𝐯 ∷
+    quote S.𝕒 ∷ quote S.var ∷ quote S.⊤· ∷ quote S.⊥· ∷ quote S._∧·_ ∷ quote S._∨·_ ∷
+    quote S._→·_ ∷ quote S.∀· ∷ quote S.∃· ∷ quote S.𝔸 ∷ quote S._Ｕ_ ∷ quote S.Ｏ ∷
+    quote S._Ｓ_ ∷ quote S.Ｙ ∷ quote S.Ｂ ∷ quote S.Ｆ_ ∷ quote S._⟨_⟩_ ∷
+    quote S.agentV ∷ quote S.agentC ∷ quote S.agentsV ∷ quote S.agentsL ∷
+    quote S.dataV ∷ quote S.dataC ∷
+    quote Sem.CEr ∷ quote Sem.CEu ∷ quote Sem.CEi ∷ []
+
+  canonName : Name → TC Name
+  canonName c = ret (find canonTable)
+    where
+    find : List Name → Name
+    find [] = c
+    find (c′ ∷ cs) = if c′ ≈ c then c′ else find cs
+
+  visOnly : List (Arg Term) → List (Arg Term)
+  visOnly [] = []
+  visOnly (a ∷ as) = if isVis a then a ∷ visOnly as else visOnly as
+
+  canonT    : ℕ → Term → TC Term
+  canonArgs : ℕ → List (Arg Term) → TC (List (Arg Term))
+  canonT zero    t = ret t
+  canonT (suc n) (R.con c args) =
+    canonName c >>= λ c′ → canonArgs n args >>= λ args′ →
+    ret (if c′ == c then R.con c args′ else R.con c′ (visOnly args′))
+  canonT (suc n) (R.def f args) = canonArgs n args >>= λ args′ → ret (R.def f args′)
+  canonT (suc n) t = ret t
+  canonArgs n [] = ret []
+  canonArgs n (arg i t ∷ as) = canonT n t >>= λ t′ → canonArgs n as >>= λ as′ → ret (arg i t′ ∷ as′)
+
+  -- the formulas of the hypotheses, premises and goal, for the shape scan
+  formulas : List Term → List Term → Term → TC (List Term)
+  formulas ctxHyps prems D = premF prems >>= λ fs → ret (D ∷ map (λ p → proj₂ (pairParts p)) ctxHyps ++ fs)
+    where
+    premF : List Term → TC (List Term)
+    premF []       = ret []
+    premF (p ∷ ps) = seqParts p >>= λ { (_ , _ , C) → premF ps >>= λ cs → ret (C ∷ cs) }
+
+  normAll : List Term → TC (List Term)
+  normAll []       = ret []
+  normAll (t ∷ ts) = R.normalise t >>= λ t′ → normAll ts >>= λ ts′ → ret (t′ ∷ ts′)
+
+  maxL : List ℕ → ℕ
+  maxL []       = 0
+  maxL (k ∷ ks) = k ⊔ maxL ks
+
+  -- The common core.  Given a sequent  seq Γ T D  and premises (all over Γ),
+  -- abstract everything, run the search srch, and return
+  --   * the plugged derivation  plug-⊢ Γ₀ σ ρ d  (dp = false) or
+  --     plug-⊢ₐ Γ₀ σ ρ α δ d  (dp = true),
+  --     of type ⊢ (seq (addHyps Γ prems) T D) up to computation, where Γ₀ is
+  --     Γ without its concrete hypotheses, and
+  --   * the premises as (T , C) pairs, for hyps→rule.
+  proveCore : Bool → Bool → Term → ℕ → Term → Term → Term → Term → List Term → TC (Term × List Term)
+  proveCore chk dpm srch n goal Γ T D prems = do
     (Γ₀ , ctxHyps) ← peelCtx 1000 Γ
     let b = freshVar goal ⊔ freshRVar goal
-    (st₀ , absCtx) ← absPairs b ([] , []) ctxHyps
-    (st₁ , real , abst) ← absPrems b st₀ prems
-    (st₂ , T′) ← absN0 b st₁ T
-    ((fs , rs) , D′) ← absF0 b st₂ D
+    -- R.normalise elaborates its argument, which creates metas for omitted
+    -- module parameters: it is run speculatively (only the shape of the
+    -- normal forms is used).
+    nfs ← (if dpm then R.runSpeculative ((formulas ctxHyps prems D >>= normAll) >>= λ ts → ret (ts , false))
+                  else ret [])
+    let ba = maxL (map (freshLit (quote S.agentC)) (goal ∷ nfs))
+    let bd = maxL (map (freshLit (quote S.dataC)) (goal ∷ nfs))
+    let sh = Data.List.concatMap scan nfs
+    let c = cfg dpm b ba bd
+    (st₀ , absCtx) ← absPairs c ([] , [] , [] , []) ctxHyps
+    (st₁ , real , abst) ← absPrems c st₀ prems
+    (st₂ , T′) ← absN0 c st₁ T
+    ((fs , rs , as , ds) , D′) ← absF0 c st₂ D
     addH ← R.quoteTC addHyps
-    dec  ← R.quoteTC search⊢
-    let Δ = addH · (vArg (R.con (quote Sem.ℂ⟨⟩) []) ∷ vArg (mkList (absCtx ++ abst)) ∷ [])
-    d ← R.runSpeculative (search′ Δ T′ D′ dec)
-    pl  ← R.quoteTC plug-⊢
-    ret (pl · (vArg Γ₀ ∷ vArg (mkσ b 0 fs) ∷ vArg (mkρ b 0 rs) ∷ hArg Δ ∷ hArg T′ ∷ hArg D′ ∷ vArg d ∷ [])
-        , real)
+    hs ← (if dpm then canonT 10000 (mkList (absCtx ++ abst)) else ret (mkList (absCtx ++ abst)))
+    T′ ← (if dpm then canonT 10000 T′ else ret T′)
+    D′ ← (if dpm then canonT 10000 D′ else ret D′)
+    let Δ = addH · (vArg (R.con (quote Sem.ℂ⟨⟩) []) ∷ vArg hs ∷ [])
+    let q = srch · (vArg (R.lit (R.nat n)) ∷ vArg Δ ∷ vArg T′ ∷ vArg D′ ∷ [])
+    (if chk then R.runSpeculative (check q) else ret tt)
+    -- As in Method 1, the derivation is passed as  from-just (search⊢ n Δ T′ D′)
+    -- rather than as its quoted normal form: Agda then only evaluates the
+    -- search, instead of type-checking every rule application of the
+    -- derivation again, which is much slower for large derivations.
+    let d = R.def (quote from-just) (vArg q ∷ [])
+    if dpm
+      then (R.quoteTC plug-⊢ₐ >>= λ pl →
+            ret (pl · (vArg Γ₀ ∷ vArg (mkσ b 0 fs) ∷ vArg (mkρs sh b 0 rs) ∷ vArg (mkα sh ba 0 as)
+                       ∷ vArg (mkδ sh bd 0 ds) ∷ vArg d ∷ [])
+                , real))
+      else (R.quoteTC plug-⊢ >>= λ pl →
+            ret (pl · (vArg Γ₀ ∷ vArg (mkσ b 0 fs) ∷ vArg (mkρ b 0 rs) ∷ hArg Δ ∷ hArg T′ ∷ hArg D′ ∷ vArg d ∷ [])
+                , real))
     where
-    -- run speculatively: the metas created while elaborating the abstract
-    -- sequent are discarded; the normal form d does not mention them
-    search′ : Term → Term → Term → Term → TC (Σ Term (λ _ → Bool))
-    search′ Δ T′ D′ dec = do
-     q ← R.catchTC (R.checkType (dec · (vArg (R.lit (R.nat n)) ∷ vArg Δ ∷ vArg T′ ∷ vArg D′ ∷ [])) R.unknown)
+    -- Check, speculatively, that the abstract goal is well typed and that the
+    -- search succeeds, to give a helpful error message otherwise.  The metas
+    -- created while elaborating the abstract sequent are discarded.
+    check : Term → TC (Σ ⊤ (λ _ → Bool))
+    check q = do
+     q′ ← R.catchTC (R.checkType q R.unknown)
                    (R.typeError (R.strErr "prove: the abstracted goal is ill-typed:"
-                                 ∷ R.termErr Δ ∷ R.strErr "⊢" ∷ R.termErr D′ ∷ []))
-     r ← R.normalise q
-     R.con _ jargs ← ret r
-       where _ → R.typeError (R.strErr "prove: search got stuck:" ∷ R.termErr r ∷ [])
-     (d ∷ _) ← ret (lastVis jargs)
-       where _ → R.typeError (R.strErr "prove: no derivation found with fuel"
-                                      ∷ R.termErr (R.lit (R.nat n)) ∷ [])
-     ret (d , false)
+                                 ∷ R.termErr q ∷ []))
+     -- The search is run by checking  refl : is-just q′ ≡ true.  Agda's
+     -- conversion checker evaluates it with sharing; evaluating it with
+     -- R.reduce instead can be exponentially slower (and run out of memory).
+     R.catchTC
+       (R.checkType (R.con (quote refl) [])
+                    (R.def (quote _≡_) (vArg (R.def (quote is-just) (vArg q′ ∷ []))
+                                        ∷ vArg (R.con (quote true) []) ∷ []))
+        >>= λ _ → ret (tt , false))
+       (R.typeError (R.strErr "prove: no derivation found (or the search got stuck) with fuel"
+                     ∷ R.termErr (R.lit (R.nat n)) ∷ []))
 
   -- Goals  ⊢ s,  sat-sequent M s  and  sat-rule M (rule ps s).
-  proveGoal : ℕ → Term → TC Term
-  proveGoal n ty = do
+  proveGoal : Bool → Bool → Term → ℕ → Term → TC Term
+  proveGoal chk dpm srch n ty = do
     R.def f args ← ret ty
       where _ → R.typeError (R.strErr "prove: unsupported goal" ∷ R.termErr ty ∷ [])
     go f (lastVis args)
@@ -457,19 +743,19 @@ private
     go f (s ∷ rest) =
       if f ≈ quote ⊢ then
         (seqParts s >>= λ { (Γ , T , D) →
-         proveCore n ty Γ T D [] >>= λ { (pd , _) → ret pd } })
+         proveCore chk dpm srch n ty Γ T D [] >>= λ { (pd , _) → ret pd } })
       else if f ≈ quote sat-sequent then
         (withM rest λ M →
          seqParts s >>= λ { (Γ , T , D) →
-         proveCore n ty Γ T D [] >>= λ { (pd , _) →
+         proveCore chk dpm srch n ty Γ T D [] >>= λ { (pd , _) →
          R.quoteTC sound >>= λ snd →
          ret (snd · (vArg M ∷ hArg R.unknown ∷ vArg pd ∷ [])) } })
       else if f ≈ quote sat-rule then
         (withM rest λ M →
-         R.reduce s >>= λ ρ → ruleParts ρ >>= λ { (c , ps) →
+         R.reduce s >>= λ ρ₀ → (if dpm then canonT 100000 ρ₀ else ret ρ₀) >>= λ ρ → ruleParts ρ >>= λ { (c , ps) →
          listElems 1000 ps >>= λ prems →
          seqParts c >>= λ { (Γ , T , D) →
-         proveCore n ty Γ T D prems >>= λ { (pd , real) →
+         proveCore chk dpm srch n ty Γ T D prems >>= λ { (pd , real) →
          R.quoteTC sound >>= λ snd →
          R.quoteTC hyps→rule >>= λ hr →
          ret (hr · (vArg M ∷ vArg Γ ∷ vArg (mkList real) ∷ vArg T ∷ vArg D
@@ -486,6 +772,18 @@ private
       ruleParts t = R.typeError (R.strErr "prove: expected rule ps c" ∷ R.termErr t ∷ [])
     go f [] = R.typeError (R.strErr "prove: unsupported goal" ∷ R.termErr ty ∷ [])
 
+private
+  -- With dp, the search is not run beforehand (by check), which would run
+  -- it twice: if the final term does not type-check, the goal is analysed
+  -- again with check, for a helpful error message.
+  proveDp : Term → ℕ → Term → TC ⊤
+  proveDp srch n hole = do
+    ty ← R.inferType hole
+    ty ← canonT 100000 ty
+    R.catchTC
+      (proveGoal false true srch n ty >>= λ t → canonT 100000 t >>= λ t → R.unify hole t)
+      (proveGoal true true srch n ty >>= λ t → canonT 100000 t >>= λ t → R.unify hole t)
+
 macro
   -- Works on goals  ⊢ s,  sat-sequent M s  and  sat-rule M (rule ps s),  where
   -- s = seq Γ T C and every premise in ps has the form  seq Γ R H  for the
@@ -494,7 +792,17 @@ macro
   prove : ℕ → Term → TC ⊤
   prove n hole = do
     ty ← R.inferType hole
-    t ← proveGoal n ty
+    srch ← R.quoteTC search⊢
+    t ← proveGoal true false srch n ty
     R.unify hole t
 
+  -- The same with the matching and saturation search search⊢⁺, where opaque
+  -- agents and data (at depth 0) are abstracted to placeholder constants,
+  -- and nested weakenings of opaque terms are reproduced (shapes).
+  prove⁺ : ℕ → Term → TC ⊤
+  prove⁺ n hole = R.quoteTC search⊢⁺ >>= λ srch → proveDp srch n hole
+
+  -- The same with the classical search search⊢ᶜ em (□L on □ = ¬◇¬).
+  proveᶜ : Term → ℕ → Term → TC ⊤
+  proveᶜ em n hole = R.quoteTC search⊢ᶜ >>= λ srch → proveDp (srch · (vArg em ∷ [])) n hole
 \end{code}

@@ -142,7 +142,7 @@ Section3-2-Forward : {Γ : Ctxt} → Agent Γ → Agent Γ → Agent Γ → Form
 Section3-2-Forward = relay
 
 Section-3-2-Conlcusion : (Γ : ℂ₀) (a b c : ℂAgent Γ) (Δ r : ℂRes Γ) (p : ℂData Γ) → Rule
-Section-3-2-Conlcusion = example1
+Section-3-2-Conlcusion = forwarding
 
 \end{code}
 
@@ -252,8 +252,8 @@ Section3-5-Derived-Rules =
 Section3-6-Lemma1 :
     (M : Model₀)
     {Γ : ℂ₀} (a b c : ℂAgent Γ) (Δ r : ℂRes Γ) (p : ℂData Γ)
-  → sat-rule M (example1 Γ a b c Δ r p)
-Section3-6-Lemma1 = example1-true
+  → sat-rule M (forwarding Γ a b c Δ r p)
+Section3-6-Lemma1 = forwarding-true
 \end{code}
 
 The following file includes simple examples of formulas that can be derived using the above rules:

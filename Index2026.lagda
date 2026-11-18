@@ -58,7 +58,7 @@ Section5-2-Form-dec = Form-dec
 Section5-2-plug-⊢ : (Γ : ℂ₀) (σ : FormSub⋆ (ℂtxt Γ)) (ρ : ResSub⋆ (ℂtxt Γ))
                     {Δ : ℂ₀} {T : ℂCE Δ} {C : ℂForm Δ}
                   → ⊢ (seq Δ T C)
-                  → ⊢ (seq (plug Γ σ ρ Δ) (⟪ Γ ⟫CE σ ρ Δ T) (⟪ Γ ⟫ σ ρ Δ C))
+                  → ⊢ (seq (plug Γ σ ρ Δ) (⟪ Γ ⟫CE σ ρ ●ₐ ●d Δ T) (⟪ Γ ⟫ σ ρ ●ₐ ●d Δ C))
 Section5-2-plug-⊢ = plug-⊢
 
 Section5-3-hyps→rule : (M : Model₀) (Γ : ℂ₀) (ps : Prems Γ) (T : ℂCE Γ) (D : ℂForm Γ)
@@ -77,5 +77,12 @@ Section5-4-◇↓R-refl = ◇↓R-refl
 Section5-4-→-refl : (M : Model₀) (A B C : Form₀) (t : ℂRes ℂ⟨⟩)
                   → sat-sequent M (seq ℂ⟨⟩ (CEr t) ((A →· B) →· (B →· C) →· A →· C))
 Section5-4-→-refl = →-refl
+
+module _ (em : EMT) where
+  open import Rules(ℕ)(W)(em) using (forwarding)
+
+  Section5-5-forwarding : (M : Model₀) {Γ : ℂ₀} (a b c : ℂAgent Γ) (Δ r : ℂRes Γ) (p : ℂData Γ)
+                        → sat-rule M (forwarding Γ a b c Δ r p)
+  Section5-5-forwarding = forwarding-auto em
 
 \end{code}
